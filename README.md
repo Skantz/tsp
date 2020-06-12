@@ -1,2 +1,5 @@
 # tsp
-that one again
+
+Solving the traveling salesman problem efficiently.
+
+open.kattis.com/problems/tsp
