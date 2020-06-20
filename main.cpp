@@ -116,9 +116,9 @@ int two_opt_move(vector<int>& tour, vector<vector<int>> dm, int i, int j) {
     return delta;
 }
 
-vector<int> k_opt(vector<int> tour, vector<vector<int>> dm) {
+vector<int> k_opt(vector<int> tour, vector<vector<int>> dm, int depth) {
     // 4 3 2 scheme
-    vector<int> scheme = {4};
+
 
     int ts = tour.size();
     assert(ts >= 1);
@@ -127,19 +127,19 @@ vector<int> k_opt(vector<int> tour, vector<vector<int>> dm) {
     int a = (int) (ts * (rand() / (RAND_MAX + 1.0)));
     //int b = (int) (ts * (rand() / (RAND_MAX + 1.0)));
     int b = ts - 1;
-    for (auto& n: scheme) {
-        for (int i = 0; i < n; i++) {
-            //a = b;
-            b = ts - 1;
-            //TOFIX: allow a == 0
-            a = 1+ (int) ((ts - 1) * (rand() / (RAND_MAX + 1.0)));
-            //b = mod(b + 1, n);
-            a = min(a, b);
-            b = max(a, b);   
 
-            delta += two_opt_move(tour, dm, a, b);
-        }
+    for (int i = 0; i < depth; i++) {
+        //a = b;
+        b = ts - 1;
+        //TOFIX: allow a == 0
+        a = 1+ (int) ((ts - 1) * (rand() / (RAND_MAX + 1.0)));
+        //b = mod(b + 1, n);
+        a = min(a, b);
+        b = max(a, b);   
+
+        delta += two_opt_move(tour, dm, a, b);
     }
+
     delta += two_opt(tour, dm);
     //cout << tour_distance(tour, dm) << " " <<  tour_distance(saved_tour, dm) << " " << delta;
     //cout << "Kopt delta " << delta << endl;
@@ -187,14 +187,15 @@ int main(int argc, char *argv[]) {
     auto t2 = chrono::high_resolution_clock::now();
 
     for (int i = 0; i < 50000; i++) {
-        tour = k_opt(tour, dm);
+
+        tour = k_opt(tour, dm, 4);
         #if DEBUG == 1
         if (i % 100 == 0)
             cout << tour_distance(tour, dm) << endl;
         #endif
         t2 = chrono::high_resolution_clock::now();
         chrono::duration<double, milli> time_since = t2 - t1;
-        if (time_since.count() > 1850) {
+        if (time_since.count() > 1910) {
             break;
         }
     }
