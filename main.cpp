@@ -7,6 +7,8 @@
 #include <assert.h>
 #include <ctime>
 #include <chrono>
+#include <functional>
+#include <queue>
 
 using namespace std;
 
@@ -28,6 +30,31 @@ vector<vector<int>> create_distance_matrix(vector<double> points) {
         }
     }
     return dm;
+}
+
+vector<vector<int>> create_nearest_neighbor_matrix(vector<vector<int>> dm, int k) {
+    int n = dm[0].size();
+    vector<vector<int>> nm;
+    for (int i = 0; i < n ; i++) {
+        nm.push_back(vector<int>(0, k));
+    }
+
+    for (int r = 0; r < n; r++) {
+
+        vector<int> row = dm[r];
+        priority_queue<pair<int, int>> row_queue;
+
+        for (int i = 0; i < row.size(); ++i) {
+            row_queue.push(std::pair<double, int>(row[i], i));
+        }
+
+        for (int i = 0; i < k; ++i) {
+            int k_idx = row_queue.top().second;
+            nm[r].push_back(k_idx);
+            row_queue.pop();
+        }
+    }
+    return nm;
 }
 
 int tour_distance(vector<int> tour, vector<vector<int>> dm) {
@@ -156,7 +183,7 @@ vector<int> k_opt(vector<int> tour, vector<vector<int>> dm, int depth) {
         //a = b;
         b = ts - 1;
         //TOFIX: allow a == 0
-        a = 1+ (int) ((ts - 1) * (rand() / (RAND_MAX + 1.0)));
+        a = 1 + (int) ((ts - 1) * (rand() / (RAND_MAX + 1.0)));
         //b = mod(b + 1, n);
         a = min(a, b);
         b = max(a, b);   
@@ -197,6 +224,7 @@ int main(int argc, char *argv[]) {
     }
 
     vector<vector<int>> dm = create_distance_matrix(points);
+    vector<vector<int>> nm = create_nearest_neighbor_matrix(dm, 5);
     
     vector<int> tour;
     for (int i = 0; i < n; i++) {
@@ -224,15 +252,16 @@ int main(int argc, char *argv[]) {
     for (int i = 0; i < 5000000; i++) {
         //int depth = n <= 200? 10: n <= 500? 4: n <= 750? 3 : 2;
         tour = k_opt(tour, dm, depth);
+        t2 = chrono::high_resolution_clock::now();
+        chrono::duration<double, milli> time_since = t2 - t1;
         #if VERBOSE == 1
         int new_dist = tour_distance(tour, dm);
         if (new_dist < best_tour_dist) {
-            cout << new_dist << " <- " << best_tour_dist << endl;
+            cout << new_dist << " <- " << best_tour_dist << " in " << time_since.count() << endl;
             best_tour_dist = new_dist;
         }
         #endif
-        t2 = chrono::high_resolution_clock::now();
-        chrono::duration<double, milli> time_since = t2 - t1;
+
         if (time_since.count() > 1910) {
             i_ = i;
             break;
