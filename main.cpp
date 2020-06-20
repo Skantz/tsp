@@ -11,6 +11,7 @@
 using namespace std;
 
 #define DEBUG 0
+#define VERBOSE 1
 
 //x1, y1, x2, y2..
 vector<vector<int>> create_distance_matrix(vector<double> points) {
@@ -36,6 +37,29 @@ int tour_distance(vector<int> tour, vector<vector<int>> dm) {
         s += dm[tour[i]][tour[i + 1]];
     }
     return s + dm[tour[tour.size() - 1]][tour[0]];
+}
+
+vector<int> greedy_tour(vector<vector<int>>& dm) {
+
+    int n = dm[0].size();
+    vector<int> tour;
+    vector<int> used_vertices(n,0);
+
+    int min_pos = 1;
+    used_vertices[0] = 1;
+    tour.push_back(0);
+    for (int i = 1; i < n; i++) {
+        min_pos = -1;
+        for (int j = 0; j < n; j++) {
+        int previous = tour[-1];
+        if (used_vertices[j] != 1 && (min_pos == -1 || (dm[previous][j] < dm[previous][min_pos]))) 
+            min_pos = j;
+        }
+    tour.push_back(min_pos);
+    used_vertices[min_pos] = 1;
+    }
+
+    return tour;
 }
 
 int mod (int a, int b)
@@ -122,7 +146,7 @@ vector<int> k_opt(vector<int> tour, vector<vector<int>> dm, int depth) {
 
     int ts = tour.size();
     assert(ts >= 1);
-    vector<int> saved_tour(tour);
+    vector<int> new_tour(tour);
     int delta = 0;
     int a = (int) (ts * (rand() / (RAND_MAX + 1.0)));
     //int b = (int) (ts * (rand() / (RAND_MAX + 1.0)));
@@ -137,17 +161,17 @@ vector<int> k_opt(vector<int> tour, vector<vector<int>> dm, int depth) {
         a = min(a, b);
         b = max(a, b);   
 
-        delta += two_opt_move(tour, dm, a, b);
+        delta += two_opt_move(new_tour, dm, a, b);
     }
 
-    delta += two_opt(tour, dm);
+    delta += two_opt(new_tour, dm);
     //cout << tour_distance(tour, dm) << " " <<  tour_distance(saved_tour, dm) << " " << delta;
     //cout << "Kopt delta " << delta << endl;
-    if (delta > 0) {
-        tour = saved_tour;
+    if (delta < 0) {
+        tour = new_tour;
     }
 
-    else if (delta < 0) {
+    if (delta < 0) {
         #if DEBUG == 1
         assert(tour_distance(tour, dm) < tour_distance(saved_tour, dm));
         #endif
@@ -179,6 +203,7 @@ int main(int argc, char *argv[]) {
         tour.push_back(i);
     }
 
+    tour = greedy_tour(dm);
     two_opt(tour, dm);
 
 
@@ -186,22 +211,37 @@ int main(int argc, char *argv[]) {
     auto t1 = chrono::high_resolution_clock::now();
     auto t2 = chrono::high_resolution_clock::now();
 
-    for (int i = 0; i < 50000; i++) {
+    #if VERBOSE == 1
+    int best_tour_dist = *max_element(dm[0].begin(), dm[0].end()) * n  + 1;
+    
+    #endif
 
-        tour = k_opt(tour, dm, 4);
-        #if DEBUG == 1
-        if (i % 100 == 0)
-            cout << tour_distance(tour, dm) << endl;
+    int non_improvement_threshold = 10;
+    long raise_depth_every = 1000;
+    int depth = 3;
+    int i_;
+
+    for (int i = 0; i < 5000000; i++) {
+        //int depth = n <= 200? 10: n <= 500? 4: n <= 750? 3 : 2;
+        tour = k_opt(tour, dm, depth);
+        #if VERBOSE == 1
+        int new_dist = tour_distance(tour, dm);
+        if (new_dist < best_tour_dist) {
+            cout << new_dist << " <- " << best_tour_dist << endl;
+            best_tour_dist = new_dist;
+        }
         #endif
         t2 = chrono::high_resolution_clock::now();
         chrono::duration<double, milli> time_since = t2 - t1;
         if (time_since.count() > 1910) {
+            i_ = i;
             break;
         }
     }
 
-    #if DEBUG == 1
+    #if VERBOSE == 1
     cout << tour_distance(tour, dm) << endl;
+    cout << "n steps " << i_ << endl;
     #endif
 
     for (int i = 0; i < n; i++) {
