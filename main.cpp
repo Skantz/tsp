@@ -24,7 +24,7 @@ vector<vector<int>> create_distance_matrix(vector<double> points) {
         for (int j = 0; j < n; j++) { 
             double x_dist = (points[i*2] - points[j*2]);
             double y_dist = (points[i*2 + 1] - points[j*2 + 1]);
-            dm[i].push_back(sqrt((pow(x_dist, 2) + pow(y_dist, 2))));
+            dm[i].push_back(round(sqrt((pow(x_dist, 2) + pow(y_dist, 2)))));
         }
     }
     return dm;
