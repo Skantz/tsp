@@ -16,8 +16,60 @@ using namespace std;
 #define DEBUG   0
 #define VERBOSE 1
 
+struct tour {
+    vector<int> id;
+    vector<int> pos;
+
+    void set(int a, int b) {
+        pos[b]  = pos[a];
+        id[b] = id[a];
+        return;
+    }
+
+    void swap(int a, int b) {
+        int saved_pos = pos[b];
+        int saved_id  = id[b];
+        pos[b] = a;
+        id[b]  = id[a];
+        pos[a] = saved_pos;
+        id[a]  = saved_id;
+    }
+
+    void reverse(int a, int b) {
+        assert(b >= a);
+        //int n = id.size();
+        for (int i = 0; i < (a - b)/2; i++) {
+            swap(a + i, b - i);
+    }   };
+
+    tour() {
+        id = vector<int>();
+        pos = vector<int>();
+    };
+
+    tour(int n) {
+        id = vector<int>(n);
+        pos = vector<int>(n);
+        for (int i = 0; i < n; i++) {
+            id.push_back(i);
+            pos.push_back(i);
+    }  };
+
+    tour(vector<int> v) {
+        int n = v.size();
+        id = vector<int>(n);
+        pos = vector<int>(n);
+        for (int i = 0; i < v.size(); i++) {
+            id[i] = i;
+            pos[i] = v[i];
+}   }   };
+
+void nothing() {
+    ;
+}
 
 //x1, y1, x2, y2..
+
 vector<vector<int>> create_distance_matrix(vector<double> points) {
     int n = points.size() / 2;
     vector<vector<int>> dm;
@@ -161,7 +213,7 @@ int two_opt_nn(vector<int>& tour, vector<vector<int>>& dm, vector<vector<int>> n
                 for (int direction = -1; direction <= 1; direction += 2) {
 
                     int j = i_nbor + direction;
-                    
+
                     int j_p = (j + 1) % n; 
 
                     int cost_1 = dm[tour[i_m]][tour[i]];
@@ -451,6 +503,8 @@ int main(int argc, char *argv[]) {
         std::cin >> val;
         points.push_back(val);
     }
+
+
 
     static vector<vector<int>> dm = create_distance_matrix(points);
     static vector<vector<int>> nm = create_nearest_neighbor_matrix(dm, 10);
