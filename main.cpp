@@ -9,12 +9,12 @@
 #include <chrono>
 #include <functional>
 #include <queue>
+#include <set>
 
 using namespace std;
 
 #define DEBUG   0
 #define VERBOSE 1
-
 
 
 //x1, y1, x2, y2..
@@ -62,11 +62,13 @@ vector<vector<int>> create_nearest_neighbor_matrix(vector<vector<int>> dm, int k
 int tour_distance(vector<int> tour, vector<vector<int>> dm) {
     
     int s = 0;
-    for (int i = 0; i < tour.size() - 1; i++) {
+    int n = tour.size();
+    for (int i = 0; i < n - 1; i++) {
         s += dm[tour[i]][tour[i + 1]];
     }
-    return s + dm[tour[tour.size() - 1]][tour[0]];
+    return s + dm[tour[n - 1]][tour[0]];
 }
+
 
 vector<int> greedy_tour(vector<vector<int>>& dm) {
 
@@ -91,21 +93,24 @@ vector<int> greedy_tour(vector<vector<int>>& dm) {
     return tour;
 }
 
+
 int mod (int a, int b)
 { return a >= 0 ? a % b : ( b - abs ( a % b ) ) % b; }
+
 
 int two_opt(vector<int>& tour, vector<vector<int>>& dm) {
     int n = tour.size();
 
     bool improved = true;
     int capital_delta = 0;
+
     while (improved) {
         improved = false;
-        for (int i = 0; i < tour.size() ; i++) {
-            for (int j = i + 1; j < tour.size() - 1; j++) {
+        for (int i = 0; i < n ; ++i) {
+            for (int j = i + 1; j < n - 1; ++j) {
 
                 int i_m = mod((i - 1), n);
-                int j_p = mod((j + 1), n);  
+                int j_p = (j + 1) % n; 
 
                 int cost_1 = dm[tour[i_m]][tour[i]];
                 int cost_2 = dm[tour[j]][tour[j_p]];
@@ -116,25 +121,76 @@ int two_opt(vector<int>& tour, vector<vector<int>>& dm) {
                 int delta = (new_cost_1 + new_cost_2) - (cost_1 + cost_2);
 
                 if (delta < 0) {
-                    //SWAP
+
                     #if DEBUG == 1
                     double old_cost = tour_distance(tour, dm);
                     #endif
-                    std::reverse(tour.begin() + i , tour.begin() + j + 1);
+
+                    std::reverse(tour.begin() + i, tour.begin() + j + 1);
                     improved = true;
+
                     #if DEBUG == 1
                     double new_cost = tour_distance(tour, dm);
                     //cout << old_cost << " -> " << new_cost << endl;
                     assert(new_cost < old_cost);
                     assert(new_cost == old_cost + delta);
                     #endif 
+                    
                     capital_delta += delta;
-                    //i -= 1;
-                    //break;
-                }
-            }
-        }
-    }
+    }   }   }   }
+
+    return capital_delta;
+}
+
+
+int two_opt_nn(vector<int>& tour, vector<vector<int>>& dm, vector<vector<int>> nm, vector<set<int>>& ns) {
+    int n = tour.size();
+
+    bool improved = true;
+    int capital_delta = 0;
+
+    while (improved) {
+        improved = false;
+        for (int i = 0; i < n ; ++i) {
+
+            int i_m = mod((i - 1), n);
+            int i_p = (i + 1) % n;
+
+            for (auto& i_nbor: nm[i]) {
+
+                for (int direction = -1; direction <= 1; direction += 2) {
+
+                    int j = i_nbor + direction;
+                    
+                    int j_p = (j + 1) % n; 
+
+                    int cost_1 = dm[tour[i_m]][tour[i]];
+                    int cost_2 = dm[tour[j]][tour[j_p]];
+
+                    int new_cost_1 = dm[tour[i]][tour[j_p]];
+                    int new_cost_2 = dm[tour[i_m]][tour[j]];
+
+                    int delta = (new_cost_1 + new_cost_2) - (cost_1 + cost_2);
+
+                    if (delta < 0) {
+
+                        #if DEBUG == 1
+                        double old_cost = tour_distance(tour, dm);
+                        #endif
+
+                        std::reverse(tour.begin() + i, tour.begin() + j + 1);
+                        improved = true;
+
+                        #if DEBUG == 1
+                        double new_cost = tour_distance(tour, dm);
+                        //cout << old_cost << " -> " << new_cost << endl;
+                        assert(new_cost < old_cost);
+                        assert(new_cost == old_cost + delta);
+                        #endif 
+                        
+                        capital_delta += delta;
+    }   }   }   }   }
+
     return capital_delta;
 }
 
@@ -148,9 +204,9 @@ int two_opt_no_look(vector<int>& tour, vector<vector<int>>& dm) {
     vector<bool> bits(n, false);
     while (improved) {
         improved = false;
-        for (int i = 0; i < tour.size() ; i++) {
+        for (int i = 0; i < n ; i++) {
             if (bits[i] == true) {continue;}
-            for (int j = i + 1; j < tour.size() - 1; j++) {
+            for (int j = i + 1; j < n - 1; j++) {
                 if (bits[j] == true) {continue;}
                 int i_m = mod((i - 1), n);
                 int j_p = mod((j + 1), n);  
@@ -332,7 +388,7 @@ int two_opt_move(vector<int>& tour, vector<vector<int>> dm, int i, int j) {
 
 
 
-vector<int> k_opt(vector<int> tour, vector<vector<int>> dm, int depth) {
+vector<int> k_opt(vector<int> tour, vector<vector<int>> dm, vector<vector<int>> nm, vector<set<int>> ns, int depth) {
     // 4 3 2 scheme
 
     int ts = tour.size();
@@ -340,7 +396,7 @@ vector<int> k_opt(vector<int> tour, vector<vector<int>> dm, int depth) {
     vector<int> new_tour(tour);
     int delta = 0;
     int a;
-    int b = ts - 1;
+    int b;
 
     for (int i = 0; i < depth; i++) {
         //a = b;
@@ -352,10 +408,22 @@ vector<int> k_opt(vector<int> tour, vector<vector<int>> dm, int depth) {
         if (delta < 0) {return tour;}
     }
 
+    #if VERBOSE == 1
+    auto t1 = chrono::high_resolution_clock::now();
+    #endif
 
-    delta += two_opt_no_look(new_tour, dm);
+    delta += two_opt_nn(new_tour, dm, nm, ns);
+    //delta += two_opt(new_tour, dm);
+
+    #if VERBOSE == 1
+    auto t2 = chrono::high_resolution_clock::now();
+    chrono::duration<double, milli> time_since = t2 - t1;
+    cout << "two opt took " << time_since.count() << endl;
+    #endif
+
     //cout << tour_distance(tour, dm) << " " <<  tour_distance(saved_tour, dm) << " " << delta;
     //cout << "Kopt delta " << delta << endl;
+
     if (delta < 0) {
         #if DEBUG == 1
         vector<int> saved_tour(tour);
@@ -384,10 +452,10 @@ int main(int argc, char *argv[]) {
         points.push_back(val);
     }
 
-    vector<vector<int>> dm = create_distance_matrix(points);
-    vector<vector<int>> nm = create_nearest_neighbor_matrix(dm, 5);
-    
-    vector<int> tour;
+    static vector<vector<int>> dm = create_distance_matrix(points);
+    static vector<vector<int>> nm = create_nearest_neighbor_matrix(dm, 10);
+    static vector<int> tour;
+
     for (int i = 0; i < n; i++) {
         tour.push_back(i);
     }
@@ -402,16 +470,25 @@ int main(int argc, char *argv[]) {
     int best_tour_dist = *max_element(dm[0].begin(), dm[0].end()) * n  + 1;
     #endif
 
-    int non_improvement_threshold = 10;
-    long raise_depth_every = 1000;
-    int depth = 3;
-    int i_;
 
-    for (int i = 0; i < 5000000; i++) {
-        //int depth = n <= 200? 10: n <= 500? 4: n <= 750? 3 : 2;
-        tour = k_opt(tour, dm, depth);
+    vector<set<int>> ns;
+    for (int i = 0; i < n; i++){
+        ns.push_back(set<int>());
+        for (auto& n: nm[i]) {
+            ns[i].insert(n);
+        }
+    }
+
+    int depth = 3;
+    int i = 0;
+
+    while (true) {
+
+        tour = k_opt(tour, dm, nm, ns, depth);
+
         t2 = chrono::high_resolution_clock::now();
         chrono::duration<double, milli> time_since = t2 - t1;
+
         #if VERBOSE == 1
         int new_dist = tour_distance(tour, dm);
         if (new_dist < best_tour_dist) {
@@ -419,16 +496,19 @@ int main(int argc, char *argv[]) {
             best_tour_dist = new_dist;
         }
         #endif
+
         //or_opt(tour, dm);
         if (time_since.count() > 1910) {
-            i_ = i;
             break;
         }
+        #if VERBOSE == 1
+        i++;
+        #endif
     }
 
     #if VERBOSE == 1
     cout << tour_distance(tour, dm) << endl;
-    cout << "n steps " << i_ << endl;
+    cout << "n steps " << i << endl;
     #endif
 
     for (int i = 0; i < n; i++) {
