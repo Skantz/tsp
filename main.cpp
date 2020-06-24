@@ -14,7 +14,7 @@
 using namespace std;
 
 #define DEBUG   0
-#define VERBOSE 1
+#define VERBOSE 0
 
 struct tour {
     vector<int> id;
@@ -464,8 +464,8 @@ vector<int> k_opt(vector<int> tour, vector<vector<int>> dm, vector<vector<int>> 
     auto t1 = chrono::high_resolution_clock::now();
     #endif
 
-    delta += two_opt_nn(new_tour, dm, nm, ns);
-    //delta += two_opt(new_tour, dm);
+    //delta += two_opt_nn(new_tour, dm, nm, ns);
+    delta += two_opt(new_tour, dm);
 
     #if VERBOSE == 1
     auto t2 = chrono::high_resolution_clock::now();
@@ -490,6 +490,109 @@ vector<int> k_opt(vector<int> tour, vector<vector<int>> dm, vector<vector<int>> 
 }
 
 
+vector<int> anneal(vector<int> tour, vector<vector<int>> dm, double time_limit) {
+
+    #if VERBOSE == 1
+    int counter = 0;
+    #endif
+
+    auto start_time = chrono::high_resolution_clock::now();
+
+    int n = tour.size();
+    int cost = tour_distance(tour, dm);
+
+    double cooling_rate = 0.4;
+    double temperature  = 200;
+
+    chrono::duration<double, milli> time_since;
+
+    while (true) {
+
+        auto curr = chrono::high_resolution_clock::now();
+        time_since = curr - start_time;
+        if ((time_since).count() > time_limit) {break;}
+
+        int v1 = 1 + rand() % (n - 1);
+        int u1 = 1 + rand() % (n - 1);
+        v1 = min(v1, u1);
+        u1 = max(v1, u1);
+
+        //Random swap of 2 elements
+        int gain_rand = dm[tour[v1 - 1]][tour[v1]] + dm[tour[v1]][tour[v1 + 1]];
+        gain_rand    += dm[tour[u1 - 1]][tour[u1]] + dm[tour[u1]][tour[u1 + 1]];
+
+        int loss_rand = dm[tour[v1]][tour[u1 - 1]] + dm[tour[v1]][tour[u1 + 1]];
+        loss_rand    += dm[tour[u1]][tour[v1 - 1]] + dm[tour[u1]][tour[v1 + 1]];
+
+        int v2 = 1 + rand() % (n - 2);
+        int u2 = 1 + rand() % (n - 2);
+
+        v2 = min(v2, u2);
+        u2 = max(v2, u2);
+
+        //TOFIX
+        if (u2 == v2 || u1 == v1) {continue;}
+
+        int gain_2opt  = dm[tour[v2 - 1]][tour[v2]];
+        gain_2opt     += dm[tour[u2]][tour[u2 + 1]];
+
+        int loss_2opt  = dm[tour[v2]][tour[u2 + 1]];
+        loss_2opt     += dm[tour[v2 - 1]][tour[u2]];
+
+        int new_rand = cost + gain_rand - loss_rand;
+        double accept_p_rand = exp(-(new_rand - cost) / temperature);
+
+        /*
+        if (accept_p_rand > rand()/RAND_MAX || new_rand < cost) {
+            //update
+            cost = new_rand;
+            int s = tour[u1];
+            tour[v1] = tour[u1];
+            tour[u1] = s;
+            cost = cost - gain_rand + loss_rand;
+
+            //assert(tour_distance(tour, dm) == cost);
+            continue;
+        }            cost = tour_distance(tour, dm);
+        */
+        
+
+        int new_2opt = cost - gain_2opt + loss_2opt;
+        double accept_p_2opt = exp(-(new_2opt - cost) / temperature);
+
+        if (accept_p_2opt > rand()/RAND_MAX || new_2opt < cost) {
+            //update
+            reverse(tour.begin() + v2, tour.begin() + u2 + 1);
+            cost = new_2opt;
+        }   
+
+        temperature = max(0., temperature - cooling_rate);
+
+        #if DEBUG == 1
+        assert(tour_distance(tour, dm) == cost);
+        #endif
+
+        #if VERBOSE == 1
+        if (counter % 1000 == 0) {
+            cout << "cost at time c: " << counter << " is: " << cost << endl;
+            cout << "temperature:" << temperature << endl;
+            cout << "time: " << time_since.count() << endl;
+        }
+        counter++;
+        #endif
+    }
+
+    #if VERBOSE == 1
+    cout << "anneal ran n times: " << counter << endl;
+    cout << "temperature at end" << temperature << endl;
+    cout << "in time " << time_since.count() << endl;
+    cout << "new cost " << tour_distance(tour, dm) << endl;
+    #endif
+
+    return tour;
+}
+
+
 int main(int argc, char *argv[]) {
 
     srand( (unsigned)time(0) );
@@ -508,10 +611,10 @@ int main(int argc, char *argv[]) {
 
     static vector<vector<int>> dm = create_distance_matrix(points);
     static vector<vector<int>> nm = create_nearest_neighbor_matrix(dm, 10);
-    static vector<int> tour;
+    static vector<int> tour(n);
 
     for (int i = 0; i < n; i++) {
-        tour.push_back(i);
+        tour[i] = i;
     }
 
     tour = greedy_tour(dm);
@@ -521,7 +624,7 @@ int main(int argc, char *argv[]) {
     auto t2 = chrono::high_resolution_clock::now();
 
     #if VERBOSE == 1
-    int best_tour_dist = *max_element(dm[0].begin(), dm[0].end()) * n  + 1;
+    int best_tour_dist = tour_distance(tour, dm);//*max_element(dm[0].begin(), dm[0].end()) * n  + 1;
     #endif
 
 
@@ -539,6 +642,8 @@ int main(int argc, char *argv[]) {
     while (true) {
 
         tour = k_opt(tour, dm, nm, ns, depth);
+        //tour = anneal(tour, dm, 1700);
+        //two_opt(tour, dm);
 
         t2 = chrono::high_resolution_clock::now();
         chrono::duration<double, milli> time_since = t2 - t1;
