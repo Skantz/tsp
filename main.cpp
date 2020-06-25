@@ -228,6 +228,55 @@ int mod (int a, int b)
 { return a >= 0 ? a % b : ( b - abs ( a % b ) ) % b; }
 
 
+//TOFIX update maps
+int node_shift(vector<int>& tour, vector<vector<int>>& dm) {
+    int n = tour.size();
+
+    bool improved = true;
+    int capital_delta = 0;
+
+    while (improved) {
+        improved = false;
+        for (int i = 1; i < n ; ++i) {
+            for (int j = i + 2; j < n - 2; ++j) {
+
+                //int v1 = mod((i - 1), n);
+                //int u1 = (j + 1) % n; 
+                int v1 = i;
+                int u1 = j;
+
+                int gain_rand = dm[tour[v1 - 1]][tour[v1]] + dm[tour[v1]][tour[v1 + 1]];
+                gain_rand    += dm[tour[u1 - 1]][tour[u1]] + dm[tour[u1]][tour[u1 + 1]];
+
+                int loss_rand = dm[tour[v1]][tour[u1 - 1]] + dm[tour[v1]][tour[u1 + 1]];
+                loss_rand    += dm[tour[u1]][tour[v1 - 1]] + dm[tour[u1]][tour[v1 + 1]];
+
+                int delta = (loss_rand) - (gain_rand);
+
+                if (delta < 0) {
+
+                    #if DEBUG == 1
+                    double old_cost = tour_distance(tour, dm);
+                    #endif
+
+                    int saved_i = tour[i];
+                    tour[i] = tour[j];
+                    tour[j] = saved_i;
+
+                    improved = true;
+
+                    #if DEBUG == 1
+                    double new_cost = tour_distance(tour, dm);
+                    cout << old_cost << " -> " << new_cost <<  " (node shift)" << endl;
+                    assert(new_cost == old_cost + delta);
+                    assert(new_cost < old_cost);
+                    #endif 
+                    
+                    capital_delta += delta;
+    }   }   }   }
+
+    return capital_delta;
+}
 
 int two_opt(vector<int>& tour, vector<vector<int>>& dm) {
     int n = tour.size();
@@ -673,6 +722,7 @@ vector<int> k_opt(vector<int> tour, vector<vector<int>> dm, vector<vector<int>> 
     // 4 3 2 scheme
 
     int ts = tour.size();
+    int nbors = nm.size();
     assert(ts >= 1);
     vector<int> new_tour(tour);
     int delta = 0;
@@ -683,7 +733,10 @@ vector<int> k_opt(vector<int> tour, vector<vector<int>> dm, vector<vector<int>> 
         //a = b;
         b = ts - 1;
         //TOFIX: allow a == 0
+
         a = 1 + (int) ((ts - 1) * (rand() / (RAND_MAX + 1.0)));
+        //a = 0 + (int) ((nbors - 1) * (rand() / (RAND_MAX + 1.0)));
+        //a = nm[b][a] + 1;
         //a = rand() %
         delta += two_opt_move(new_tour, dm, a, b);
         if (delta < 0) {return tour;}
@@ -695,11 +748,12 @@ vector<int> k_opt(vector<int> tour, vector<vector<int>> dm, vector<vector<int>> 
 
     //delta += two_opt_nn(new_tour, dm, nm, ns);
     delta += two_opt(new_tour, dm);
+    delta += node_shift(new_tour, dm);
 
     #if VERBOSE == 1
     auto t2 = chrono::high_resolution_clock::now();
     chrono::duration<double, milli> time_since = t2 - t1;
-    cout << "two opt took " << time_since.count() << endl;
+    //cout << "two opt took " << time_since.count() << endl;
     #endif
 
     //cout << tour_distance(tour, dm) << " " <<  tour_distance(saved_tour, dm) << " " << delta;
@@ -773,6 +827,7 @@ tour_o k_opt(tour_o tour, vector<vector<int>> dm, vector<vector<int>> nm, vector
     
     return tour;
 }
+
 
 
 vector<int> anneal(vector<int> tour, vector<vector<int>> dm, double time_limit) {
@@ -908,6 +963,7 @@ int main(int argc, char *argv[]) {
     tour = greedy_tour(dm);
 
     two_opt(tour, dm);
+    node_shift(tour, dm);
 
     //TOFIX this should work
     for (int i = 0; i < n; i++){
@@ -963,7 +1019,7 @@ int main(int argc, char *argv[]) {
         #endif
 
         //or_opt(tour, dm);
-        if (time_since.count() > 1700) {
+        if (time_since.count() > 1900) {
             break;
         }
         #if VERBOSE == 1
