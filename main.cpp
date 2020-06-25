@@ -14,7 +14,7 @@
 using namespace std;
 
 #define DEBUG   0
-#define VERBOSE 1
+#define VERBOSE 0
 
 struct tour_o {
 
@@ -245,11 +245,8 @@ int node_shift(vector<int>& tour, vector<vector<int>>& dm) {
                 int v1 = i;
                 int u1 = j;
 
-                int gain_rand = dm[tour[v1 - 1]][tour[v1]] + dm[tour[v1]][tour[v1 + 1]];
-                gain_rand    += dm[tour[u1 - 1]][tour[u1]] + dm[tour[u1]][tour[u1 + 1]];
-
-                int loss_rand = dm[tour[v1]][tour[u1 - 1]] + dm[tour[v1]][tour[u1 + 1]];
-                loss_rand    += dm[tour[u1]][tour[v1 - 1]] + dm[tour[u1]][tour[v1 + 1]];
+                int gain_rand = dm[tour[v1 - 1]][tour[v1]]  +  dm[tour[v1]][tour[v1 + 1]]  +  dm[tour[u1]][tour[u1+1]];
+                int loss_rand = dm[tour[v1 - 1]][tour[v1 + 1]]  +  dm[tour[v1]][tour[u1]]  +  dm[tour[v1]][tour[u1 + 1]];
 
                 int delta = (loss_rand) - (gain_rand);
 
@@ -258,16 +255,19 @@ int node_shift(vector<int>& tour, vector<vector<int>>& dm) {
                     #if DEBUG == 1
                     double old_cost = tour_distance(tour, dm);
                     #endif
-
+                    /*
                     int saved_i = tour[i];
                     tour[i] = tour[j];
                     tour[j] = saved_i;
+                    */
+                    tour.insert(tour.begin() + u1 + 1, tour[i]);
+                    tour.erase(tour.begin() + v1);
 
                     improved = true;
 
                     #if DEBUG == 1
                     double new_cost = tour_distance(tour, dm);
-                    cout << old_cost << " -> " << new_cost <<  " (node shift)" << endl;
+                    //cout << old_cost << " -> " << new_cost <<  " (node shift)" << endl;
                     assert(new_cost == old_cost + delta);
                     assert(new_cost < old_cost);
                     #endif 
