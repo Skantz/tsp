@@ -14,55 +14,91 @@
 using namespace std;
 
 #define DEBUG   0
-#define VERBOSE 0
+#define VERBOSE 1
 
-struct tour {
+struct tour_o {
+
     vector<int> id;
     vector<int> pos;
 
     void set(int a, int b) {
-        pos[b]  = pos[a];
-        id[b] = id[a];
-        return;
+        pos[b]  = a;
+        id[b]   = a;
     }
 
     void swap(int a, int b) {
-        int saved_pos = pos[b];
-        int saved_id  = id[b];
-        pos[b] = a;
-        id[b]  = id[a];
-        pos[a] = saved_pos;
-        id[a]  = saved_id;
+        int was_at_a  = id[a];
+        int was_at_b  = id[b];
+        pos[was_at_a] = b;
+        id[b] = was_at_a;
+        pos[was_at_b] = a;
+        id[a] = was_at_b;
     }
 
     void reverse(int a, int b) {
         assert(b >= a);
-        //int n = id.size();
-        for (int i = 0; i < (a - b)/2; i++) {
+        
+        #if DEBUG == 1
+        bool success = false;
+        #endif
+        //cout  << " a " << a << " b " << b << endl;
+        for (int i = 0; i < (b - a)/2 + 1; i++) {
+            //cout << "i " << i << " a " << a << " b " << b << endl;
             swap(a + i, b - i);
-    }   };
+            #if DEBUG == 1
+            if (a + i >= b - i - 1) {success = true;}
+            if (a + i > b - i) {success = false; break;}
+            #endif
 
-    tour() {
+        }   
+
+        #if DEBUG == 1
+        assert(success == true);
+        #endif
+    }
+
+    int size() {
+        return id.size();
+    }
+
+    int at(int idx) {
+        #if DEBUG == 1
+        assert(0 <= idx && idx < id.size());
+        #endif
+        return id[idx];
+    }
+
+    tour_o() {
         id = vector<int>();
         pos = vector<int>();
     };
 
-    tour(int n) {
+    tour_o(int n) {
         id = vector<int>(n);
         pos = vector<int>(n);
         for (int i = 0; i < n; i++) {
-            id.push_back(i);
-            pos.push_back(i);
+            id[i] = i;
+            pos[i] = i;
     }  };
 
-    tour(vector<int> v) {
+    tour_o(vector<int> v) {
         int n = v.size();
         id = vector<int>(n);
         pos = vector<int>(n);
         for (int i = 0; i < v.size(); i++) {
             id[i] = i;
             pos[i] = v[i];
-}   }   };
+    }   }
+
+    /*
+    tour_o(tour_o& t) {
+        for(int i = 0; i < t.id.size(); i++) {
+            id[i] = t.id[i];
+            pos[i] = t.pos[i];
+        }
+    };
+    */
+};
 
 void nothing() {
     ;
@@ -122,21 +158,37 @@ int tour_distance(vector<int> tour, vector<vector<int>> dm) {
 }
 
 
+
+int tour_distance(tour_o tour , vector<vector<int>> dm) {
+    
+    int s = 0;
+    int n = tour.size();
+    for (int i = 0; i < n - 1; i++) {
+        s += dm[tour.at(i)][tour.at(i + 1)];
+    }
+    return s + dm[tour.at(n - 1)][tour.at(0)];
+}
+
+
+
 vector<int> greedy_tour(vector<vector<int>>& dm) {
 
     int n = dm[0].size();
     vector<int> tour;
+
     vector<int> used_vertices(n,0);
 
     int min_pos = 1;
     used_vertices[0] = 1;
     tour.push_back(0);
+
     for (int i = 1; i < n; i++) {
         min_pos = -1;
         for (int j = 0; j < n; j++) {
-        int previous = tour[-1];
-        if (used_vertices[j] != 1 && (min_pos == -1 || (dm[previous][j] < dm[previous][min_pos]))) 
-            min_pos = j;
+            int previous = tour[i-1];
+            if (used_vertices[j] != 1 && (min_pos == -1 || (dm[previous][j] < dm[previous][min_pos]))) {
+                min_pos = j;
+            }
         }
     tour.push_back(min_pos);
     used_vertices[min_pos] = 1;
@@ -146,8 +198,35 @@ vector<int> greedy_tour(vector<vector<int>>& dm) {
 }
 
 
+void greedy_tour(tour_o* tour, vector<vector<int>>& dm) {
+
+    int n = dm[0].size();
+
+    vector<int> used_vertices(n,0);
+
+    int min_pos = 1;
+    used_vertices[0] = 1;
+    (*tour).set(0, 0);
+
+    for (int i = 1; i < n; i++) {
+        min_pos = -1;
+        for (int j = 0; j < n; j++) {
+            int previous = (*tour).at(i-1);
+            if (used_vertices[j] != 1 && (min_pos == -1 || (dm[previous][j] < dm[previous][min_pos]))) {
+                min_pos = j;
+            }
+        }
+    (*tour).set(i, min_pos);
+    used_vertices[min_pos] = 1;
+    }
+
+    return;
+}
+
+
 int mod (int a, int b)
 { return a >= 0 ? a % b : ( b - abs ( a % b ) ) % b; }
+
 
 
 int two_opt(vector<int>& tour, vector<vector<int>>& dm) {
@@ -179,6 +258,52 @@ int two_opt(vector<int>& tour, vector<vector<int>>& dm) {
                     #endif
 
                     std::reverse(tour.begin() + i, tour.begin() + j + 1);
+                    improved = true;
+
+                    #if DEBUG == 1
+                    double new_cost = tour_distance(tour, dm);
+                    //cout << old_cost << " -> " << new_cost << endl;
+                    assert(new_cost < old_cost);
+                    assert(new_cost == old_cost + delta);
+                    #endif 
+                    
+                    capital_delta += delta;
+    }   }   }   }
+
+    return capital_delta;
+}
+
+
+int two_opt(tour_o& tour, vector<vector<int>>& dm) {
+
+    int n = tour.size();
+
+    bool improved = true;
+    int capital_delta = 0;
+
+    while (improved) {
+        improved = false;
+        for (int i = 0; i < n ; ++i) {
+            for (int j = i + 1; j < n - 1; ++j) {
+
+                int i_m = mod((i - 1), n);
+                int j_p = (j + 1) % n; 
+
+                int cost_1 = dm[tour.at(i_m)][tour.at(i)];
+                int cost_2 = dm[tour.at(j)][tour.at(j_p)];
+
+                int new_cost_1 = dm[tour.at(i)][tour.at(j_p)];
+                int new_cost_2 = dm[tour.at(i_m)][tour.at(j)];
+
+                int delta = (new_cost_1 + new_cost_2) - (cost_1 + cost_2);
+
+                if (delta < 0) {
+
+                    #if DEBUG == 1
+                    double old_cost = tour_distance(tour, dm);
+                    #endif
+
+                    tour.reverse(i, j);
                     improved = true;
 
                     #if DEBUG == 1
@@ -247,6 +372,62 @@ int two_opt_nn(vector<int>& tour, vector<vector<int>>& dm, vector<vector<int>> n
 }
 
 
+
+int two_opt_nn(tour_o tour, vector<vector<int>>& dm, vector<vector<int>> nm, vector<set<int>>& ns) {
+    int n = tour.size();
+
+    bool improved = true;
+    int capital_delta = 0;
+
+    while (improved) {
+        improved = false;
+        for (int i = 0; i < n ; ++i) {
+
+            int i_m = mod((i - 1), n);
+            int i_p = (i + 1) % n;
+
+            for (auto& i_nbor: nm[i]) {
+
+                for (int direction = -1; direction <= 1; direction += 2) {
+
+                    int j = tour.at(i_nbor) + direction;
+                    j = j % n;
+
+                    int j_p = (j + 1) % n; 
+
+                    int cost_1 = dm[tour.at(i_m)][tour.at(i)];
+                    int cost_2 = dm[tour.at(j)][tour.at(j_p)];
+
+                    int new_cost_1 = dm[tour.at(i)][tour.at(j_p)];
+                    int new_cost_2 = dm[tour.at(i_m)][tour.at(j)];
+
+                    int delta = (new_cost_1 + new_cost_2) - (cost_1 + cost_2);
+
+                    if (delta < 0) {
+
+                        #if DEBUG == 1
+                        double old_cost = tour_distance(tour, dm);
+                        #endif
+
+                        //std::reverse(tour.begin() + i, tour.begin() + j + 1);
+                        tour.reverse(i, j);
+                        improved = true;
+
+                        #if DEBUG == 1
+                        double new_cost = tour_distance(tour, dm);
+                        //cout << old_cost << " -> " << new_cost << endl;
+                        assert(new_cost < old_cost);
+                        assert(new_cost == old_cost + delta);
+                        #endif 
+                        
+                        capital_delta += delta;
+    }   }   }   }   }
+
+    return capital_delta;
+}
+
+
+//TOFIX - Not working! It needs a map from ids to pos
 int two_opt_no_look(vector<int>& tour, vector<vector<int>>& dm) {
     int n = tour.size();
 
@@ -440,6 +621,54 @@ int two_opt_move(vector<int>& tour, vector<vector<int>> dm, int i, int j) {
 
 
 
+int two_opt_move(tour_o& tour, vector<vector<int>> dm, int i, int j) {
+
+
+    #if DEBUG == 1
+    tour_o saved_tour(tour);
+    #endif
+
+    int n = tour.size();
+    
+    int i_m = mod((i - 1), n);
+    int j_p = mod((j + 1), n);  
+
+    #if DEBUG == 1
+    assert(n == dm.size());
+    assert(i_m >= 0 && i_m < n);
+    assert(j_p < n && j_p >= 0);
+    assert(tour.at(i_m) >= 0);
+    assert(tour.at(j_p) < n);
+    /*
+    cout << i_m << endl;
+    cout << tour.at(i_m) << endl;
+    cout << j_p << endl;
+    cout << tour.at(j_p) << endl;
+    cout << i << endl;
+    cout << tour.at(i) << endl;
+    cout << j << endl;
+    cout << tour.at(j) << endl;
+    */
+    #endif
+
+    int cost_1 = dm[tour.at(i_m)][tour.at(i)];
+    int cost_2 = dm[tour.at(j)][tour.at(j_p)];
+
+    int new_cost_1 = dm[tour.at(i)][tour.at(j_p)];
+    int new_cost_2 = dm[tour.at(i_m)][tour.at(j)];
+
+    int delta = (new_cost_1 + new_cost_2) - (cost_1 + cost_2);
+
+    tour.reverse(i, j);
+
+    #if DEBUG == 1
+    assert(tour_distance(tour, dm) ==  delta + tour_distance(saved_tour, dm));
+    if (delta < 0) assert(tour_distance(tour, dm) < tour_distance(saved_tour, dm));
+    #endif
+
+    return delta;
+}
+
 vector<int> k_opt(vector<int> tour, vector<vector<int>> dm, vector<vector<int>> nm, vector<set<int>> ns, int depth) {
     // 4 3 2 scheme
 
@@ -483,6 +712,62 @@ vector<int> k_opt(vector<int> tour, vector<vector<int>> dm, vector<vector<int>> 
         tour = new_tour;
         #if DEBUG == 1
         assert(tour_distance(tour, dm) < tour_distance(saved_tour, dm));
+        #endif
+    }
+    
+    return tour;
+}
+
+
+tour_o k_opt(tour_o tour, vector<vector<int>> dm, vector<vector<int>> nm, vector<set<int>> ns, int depth) {
+    // 4 3 2 scheme
+
+    int ts = tour.size();
+    assert(ts >= 1);
+    tour_o new_tour(tour.id);
+    int delta = 0;
+    int a;
+    int b;
+
+    for (int i = 0; i < depth; i++) {
+        //a = b;
+        b = ts - 1;
+        //TOFIX: allow a == 0
+        a = 1 + (int) ((ts - 1) * (rand() / (RAND_MAX + 1.0)));
+        //a = rand() %
+        delta += two_opt_move(new_tour, dm, a, b);
+        if (delta < 0) {return tour;}
+    }
+
+    #if VERBOSE == 1
+    auto t1 = chrono::high_resolution_clock::now();
+    #endif
+
+    //cout << tour_distance(tour, dm) << " " <<  tour_distance(new_tour, dm) << " " << delta << endl;
+    //cout << "Kopt delta " << delta << endl;
+
+    //delta += two_opt_nn(new_tour, dm, nm, ns);
+    delta += two_opt(new_tour, dm);
+
+    #if VERBOSE == 1
+    auto t2 = chrono::high_resolution_clock::now();
+    chrono::duration<double, milli> time_since = t2 - t1;
+    cout << "two opt took " << time_since.count() << endl;
+    #endif
+
+    //cout << tour_distance(tour, dm) << " " <<  tour_distance(new_tour, dm) << " " << delta << endl;
+    //cout << "Kopt delta " << delta << endl;
+
+    if (delta < 0) {
+
+        #if DEBUG == 1
+        int old_cost = tour_distance(tour, dm);
+        #endif
+        
+        tour = new_tour;
+
+        #if DEBUG == 1
+        assert(tour_distance(new_tour, dm) < old_cost);
         #endif
     }
     
@@ -611,14 +896,30 @@ int main(int argc, char *argv[]) {
 
     static vector<vector<int>> dm = create_distance_matrix(points);
     static vector<vector<int>> nm = create_nearest_neighbor_matrix(dm, 10);
+ 
     static vector<int> tour(n);
 
     for (int i = 0; i < n; i++) {
         tour[i] = i;
     }
 
+    //TOFIX constructor
+    tour_o tour_ = tour_o(n);    
     tour = greedy_tour(dm);
+
     two_opt(tour, dm);
+
+    //TOFIX this should work
+    for (int i = 0; i < n; i++){
+        tour_.set(i, tour[i]);
+    }
+
+    //greedy_tour(&tour, dm);
+
+    #if DEBUG == 1
+    assert(tour_.id.size() == n);
+    assert(tour_.pos.size() == n);
+    #endif
 
     auto t1 = chrono::high_resolution_clock::now();
     auto t2 = chrono::high_resolution_clock::now();
@@ -639,6 +940,11 @@ int main(int argc, char *argv[]) {
     int depth = 3;
     int i = 0;
 
+    #if VERBOSE == 1
+    cout << "Start optimize, cost is " << tour_distance(tour, dm) << endl;
+    cout << "(Cost of normal tour was " << tour_distance(tour_, dm) << endl;
+    #endif
+
     while (true) {
 
         tour = k_opt(tour, dm, nm, ns, depth);
@@ -657,7 +963,7 @@ int main(int argc, char *argv[]) {
         #endif
 
         //or_opt(tour, dm);
-        if (time_since.count() > 1910) {
+        if (time_since.count() > 1700) {
             break;
         }
         #if VERBOSE == 1
@@ -665,13 +971,15 @@ int main(int argc, char *argv[]) {
         #endif
     }
 
+    two_opt(tour, dm);
+
     #if VERBOSE == 1
     cout << tour_distance(tour, dm) << endl;
     cout << "n steps " << i << endl;
     #endif
 
     for (int i = 0; i < n; i++) {
-        cout << tour[i];
+        cout << tour.at(i);
         if (i < n-1)
             cout << "\n";
     }
