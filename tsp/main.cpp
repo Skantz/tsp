@@ -1,4 +1,5 @@
 
+
 #include <iostream>
 #include <sstream>
 #include <istream>
@@ -979,7 +980,7 @@ vector<int> k_opt(vector<int> tour, const vector<vector<int>>& dm, const vector<
         #endif
         tour = new_tour;
         #if DEBUG == 1
-        assert(tour_distance(tour, dm) < tour_distance(saved_tour, dm));
+        //assert(tour_distance(tour, dm) < tour_distance(saved_tour, dm));
         #endif
     }
     
@@ -1146,6 +1147,157 @@ vector<int> anneal(vector<int> tour, vector<vector<int>> dm, double time_limit) 
 }
 
 
+int lk(vector<int>& tour, const vector<vector<int>>& dm, int k) {
+    
+    int EPS = 0.5;
+    float CONST = 1.0;
+    
+    int n = tour.size();
+    int delta = 0;
+    
+    #if DEBUG
+    int old_cost = tour_distance(tour, dm);
+    #endif
+    
+    //unordered_set<pair<int, int>> removed_edges;
+    vector<int> saved_tour(tour); 
+    
+    int curr_node = 1 + (int) ((n - 1) * (rand () / (RAND_MAX + 1.0)));
+    curr_node = max(curr_node, 1);
+    int prev_node = -1;
+    int first_node = curr_node;
+    int first_neighbor = -1;
+
+    //int next_node = (curr_node + dir) % n;
+    //delta -= dm[curr_node][next_node];
+    //int dir = (rand() % 2) == 0 ? -1 : 1;
+    int dir = (rand() % 2) == 0 ? -1 : 1;
+    int start_dir = dir;
+    start_dir = 0;
+    dir = 0;
+    bool added_const_to_delta = false;
+    set<int> nodes_treated;
+    nodes_treated.insert(first_node);
+    set<pair<int, int>> removed_edges;
+    
+    //cout << "len dm " << dm.size() << " start node " << first_node << " first_neighbor " << first_neighbor << endl;
+    for (int i = 0; i < k; i++) {
+        int top_j = -1;
+        int min_cost = pow(2, 16) - 2;
+        int sub_delta = 0;
+        int dir = 0;
+        for (int j = 1; j < curr_node - 1; j++) {
+
+            //if (j == prev_node) continue; 
+            pair<int, int> edge = pair(min(tour[j], tour[curr_node]), max(tour[j], tour[curr_node]));
+            if (removed_edges.count(edge));
+                continue;
+            if (nodes_treated.count(tour[j]) && (i < k - 1)) continue;       
+            int m1 = dm[tour[curr_node]][tour[curr_node - 1]];  
+            int m2 = dm[tour[j]][tour[j - 1]];
+            int p1 = dm[tour[curr_node]][tour[j]];
+            int p2 = dm[tour[j - 1]][tour[curr_node - 1]];
+            
+            sub_delta = -(m1 + m2 - p1 - p2);
+            if (sub_delta < min_cost) {
+                top_j = j;
+                min_cost = sub_delta;
+                dir = 1;
+            }
+        }
+
+        for (int j = curr_node + 1; j < n - 1; j++) {
+
+            if (tour[j] == tour[prev_node]) continue;       
+            if (nodes_treated.count(tour[j]) && (i < k - 1)) continue;
+            int m1 = dm[tour[curr_node]][tour[curr_node + 1]];
+            int m2 = dm[tour[j]][tour[j + 1]];
+            int p1 = dm[tour[curr_node]][tour[j]];
+            int p2 = dm[tour[j + 1]][tour[curr_node + 1]];
+
+            sub_delta = -(m1 + m2 - p1 - p2);
+            if (sub_delta < min_cost) {
+                top_j = j;
+                min_cost = sub_delta;
+                dir = - 1;
+            }
+        }
+        //if (dir == 0) continue;
+        
+        assert(nodes_treated.count(tour[top_j]) == 0 || i == k -1);
+
+        if ( min_cost < 0 || (i == 0) || true) {
+
+            #if VERBOSE
+            cout << "swap " << top_j << " to " << curr_node << endl;
+            cout << tour_distance(tour, dm) << " ---> ";
+            #endif
+
+            if (dir == 1)
+                std::reverse(tour.begin() + top_j, tour.begin() + curr_node);
+            else if (dir == -1)
+                std::reverse(tour.begin() + curr_node + 1, tour.begin() + top_j + 1);
+            else 
+                assert(false);
+            prev_node = curr_node;
+            nodes_treated.insert(tour[curr_node]);
+            curr_node = curr_node + dir;
+            pair<int, int> edge = pair(min(tour[prev_node], tour[curr_node]), max(tour[prev_node], tour[curr_node]));
+            removed_edges.insert(edge);
+            if (curr_node < 1 || (curr_node > (n - 2)))
+                curr_node = 1 + (int) ((n - 1) * (rand () / (RAND_MAX + 1.0)));
+            //delta += min_cost;
+            //delta = tour_distance(tour, dm) - tour_distance(saved_tour, dm);
+            delta += min_cost;
+            #if VERBOSE
+            cout << tour_distance(tour, dm) << endl;
+            #endif
+            if (delta < 0) {
+                return delta;
+            }
+        }
+    }
+    
+    delta += two_opt(tour, dm);
+    #if DEBUG
+    int delta_before_adjust = delta;
+    #endif
+    
+    //A move was made and delta is adjusted
+    /*
+    if (first_neighbor != -1 && added_const_to_delta) {
+        delta += (CONST - 1)*dm[first_node][first_neighbor % n];
+        delta += (CONST - 1)*dm[first_neighbor][(start_dir + first_neighbor) % n];
+    }
+    */
+    //#if DEBUG
+    //int new_cost = tour_distance(tour, dm);
+    //assert((delta > 0) || old_cost < new_cost);
+    //#endif
+
+    //delta += two_opt(tour, dm);
+
+    #if VERBOSE
+    cout << tour_distance(tour, dm) << " <---" << tour_distance(saved_tour, dm) << endl;
+    cout << tour_distance(saved_tour, dm) + delta << " <---" << tour_distance(saved_tour, dm) << "(calc)" << endl;
+    #endif
+
+    #if DEBUG
+    assert(tour_distance(tour, dm) == tour_distance(saved_tour, dm) + delta);
+    #endif
+
+    if (delta > 0) {
+        for (int i = 0; i < n; i++) {
+            tour[i] = saved_tour[i];
+        }
+    }
+
+
+
+    return delta;
+}
+
+
 int main(int argc, char *argv[]) {
 
     srand( (unsigned)time(0) );
@@ -1159,8 +1311,6 @@ int main(int argc, char *argv[]) {
         std::cin >> val;
         points.push_back(val);
     }
-
-
 
     static vector<vector<int>> dm = create_distance_matrix(points);
     static vector<vector<int>> nm = create_nearest_neighbor_matrix(dm, 10);
@@ -1183,13 +1333,11 @@ int main(int argc, char *argv[]) {
     */
     node_shift(tour, dm);
 
-
-
     //greedy_tour(&tour, dm);
 
     #if DEBUG == 1
-    assert(tour_.id.size() == n);
-    assert(tour_.pos.size() == n);
+    //assert(tour_.id.size() == n);
+    //assert(tour_.pos.size() == n);
     #endif
 
     auto t1 = chrono::high_resolution_clock::now();
@@ -1213,12 +1361,16 @@ int main(int argc, char *argv[]) {
 
     #if VERBOSE == 1
     cout << "Start optimize, cost is "   << tour_distance(tour, dm)  << endl;
-    cout << "(Cost of normal tour was) " << tour_distance(tour_, dm) << endl;
+    //cout << "(Cost of normal tour was) " << tour_distance(tour_, dm) << endl;
     #endif
 
     while (true) {
 
+        //tour = k_opt(tour, dm, nm, ns, depth);
         tour = k_opt(tour, dm, nm, ns, depth);
+        for (int i = 0; i < 1 && 8 - n > 10; i++) {
+            lk(tour, dm, 8);
+        }
         //tour = anneal(tour, dm, 1700);
         //two_opt(tour, dm);
 
@@ -1239,15 +1391,17 @@ int main(int argc, char *argv[]) {
             break;
         }       
         #endif
-        if (time_since.count() > 1890) {
+        #if TIME_LIMIT <= 0
+        if (time_since.count() > 1740) {
             break;
         }
+        #endif
         #if VERBOSE == 1
         i++;
         #endif
     }
 
-    two_opt(tour, dm);
+    //two_opt(tour, dm);
 
     #if VERBOSE == 1
     cout << tour_distance(tour, dm) << endl;
@@ -1263,3 +1417,4 @@ int main(int argc, char *argv[]) {
   return 0;
 
 }
+
