@@ -104,6 +104,16 @@ void nothing() {
     ;
 }
 
+bool all_different(vector<int> t) {
+    vector<int> mem(t.size(), 0);
+    for (auto n: t) {
+        mem[n] += 1;
+        if (mem[n] > 1)
+            return false;
+    }
+    return true;
+}
+
 //x1, y1, x2, y2..
 
 vector<vector<int>> create_distance_matrix(vector<double> points) {
@@ -638,6 +648,100 @@ int local_two_opt(vector<int>& tour, vector<vector<int>>& dm, int parts) {
     return capital_delta;
 }
 
+//Calculates change wrong
+int three_opt(vector<int>& tour, vector<vector<int>>& dm) {
+    int n = tour.size();
+
+    bool improved = true;
+    int capital_delta = 0;
+
+    while (improved) {
+        improved = false;
+        for (int i = 1; i < n ; ++i) {
+            for (int j = i + 2; j < n - 2; ++j) {
+                for (int k = j + 2; k < n - 2; ++k) {
+
+                    int a, b, c, d, e, f;
+                    a = tour[i - 1];
+                    b = tour[i];
+                    c = tour[j - 1];
+                    d = tour[j];
+                    e = tour[k - 1];
+                    f = tour[k];
+                    //cout << "a ... f" << a << " " << b << " " << c << " " << d << " " << e << " " << f  << endl;
+
+                    int d0 = dm[a][b] + dm[c][d] + dm[e][f];
+                    int d1 = dm[a][c] + dm[b][d] + dm[e][f];
+                    int d2 = dm[a][b] + dm[c][e] + dm[d][f];
+                    int d3 = dm[a][d] + dm[e][b] + dm[c][f];
+                    int d4 = dm[f][b] + dm[c][d] + dm[e][a];
+
+                    int delta = 0;
+
+                    #if DEBUG == 1
+                    double old_cost = tour_distance(tour, dm);
+                    //cout << d0 << " " << d1 << " " << d2 << " " << d3 << " " << d4 << endl;
+                    #endif
+
+                    if (d0 > d1) {
+                        std::reverse(tour.begin() + i, tour.begin() + j );
+                        delta = -d0 + d1;
+                    }
+                    else if (d0 > d2) {
+                        std::reverse(tour.begin() + j, tour.begin() + k );
+                        delta = -d0 + d2;
+                    }
+                    
+                    else if (d0 > d3) {
+                        vector<int> t;
+                        t.clear();
+                        for (int iter = j; iter < k; iter++) {
+                            t.push_back(tour[iter]);
+                        }
+                        for (int iter = i; iter < j; iter++) {
+                            t.push_back(tour[iter]);
+                        }
+
+                        int iter = i;
+                        for (auto& n: t) {
+                            tour[iter] = n;
+                            iter++;
+                        }
+
+                        delta = -d0 + d3;
+
+                        #if DEBUG == 1
+                        assert(all_different(tour));
+                        #endif
+                    }
+                    
+                    else if (d0 > d4) {
+                        std::reverse(tour.begin() + i, tour.begin() + k );
+                        delta = -d0 + d4;
+                    }
+                
+                    if (delta < 0) {
+
+
+
+                        //std::reverse(tour.begin() + i, tour.begin() + j + 1);
+                        improved = true;
+
+                        #if DEBUG == 1
+                        double new_cost = tour_distance(tour, dm);
+                        cout << old_cost << " -> " << new_cost << endl;
+                        assert(new_cost < old_cost);
+                        assert(new_cost == old_cost + delta);
+                        #endif 
+                        
+                        capital_delta += delta;
+    }   }   }   }   }
+
+    return capital_delta;
+}
+
+
+
 int two_opt_move(vector<int>& tour, vector<vector<int>> dm, int i, int j) {
 
 
@@ -749,6 +853,9 @@ vector<int> k_opt(vector<int> tour, vector<vector<int>> dm, vector<vector<int>> 
     //delta += two_opt_nn(new_tour, dm, nm, ns);
     delta += two_opt(new_tour, dm);
     delta += node_shift(new_tour, dm);
+    if (tour.size() < 200) {
+        delta += three_opt(new_tour, dm);
+    }
 
     #if VERBOSE == 1
     auto t2 = chrono::high_resolution_clock::now();
@@ -963,6 +1070,9 @@ int main(int argc, char *argv[]) {
     tour = greedy_tour(dm);
 
     two_opt(tour, dm);
+    if (n < 200) {
+        three_opt(tour, dm);
+    }
     node_shift(tour, dm);
 
     //TOFIX this should work
