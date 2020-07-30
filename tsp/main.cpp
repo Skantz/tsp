@@ -1,3 +1,4 @@
+
 #include <iostream>
 #include <sstream>
 #include <istream>
@@ -181,19 +182,18 @@ int tour_distance(tour_o tour , vector<vector<int>> dm) {
 
 
 
-vector<int> greedy_tour(vector<vector<int>>& dm) {
+vector<int> greedy_tour(const vector<vector<int>>& dm) {
 
     int n = dm[0].size();
     vector<int> tour;
 
     vector<int> used_vertices(n,0);
-
-    int min_pos = 1;
+    
     used_vertices[0] = 1;
     tour.push_back(0);
 
     for (int i = 1; i < n; i++) {
-        min_pos = -1;
+        int min_pos = -1;
         for (int j = 0; j < n; j++) {
             int previous = tour[i-1];
             if (used_vertices[j] != 1 && (min_pos == -1 || (dm[previous][j] < dm[previous][min_pos]))) {
@@ -208,18 +208,17 @@ vector<int> greedy_tour(vector<vector<int>>& dm) {
 }
 
 
-void greedy_tour(tour_o* tour, vector<vector<int>>& dm) {
+void greedy_tour(tour_o* tour, const vector<vector<int>>& dm) {
 
     int n = dm[0].size();
 
     vector<int> used_vertices(n,0);
 
-    int min_pos = 1;
     used_vertices[0] = 1;
     (*tour).set(0, 0);
 
     for (int i = 1; i < n; i++) {
-        min_pos = -1;
+        int min_pos = -1;
         for (int j = 0; j < n; j++) {
             int previous = (*tour).at(i-1);
             if (used_vertices[j] != 1 && (min_pos == -1 || (dm[previous][j] < dm[previous][min_pos]))) {
@@ -239,7 +238,7 @@ int mod (int a, int b)
 
 
 //TOFIX update maps
-int node_shift(vector<int>& tour, vector<vector<int>>& dm) {
+int node_shift(vector<int>& tour, const vector<vector<int>>& dm) {
     int n = tour.size();
 
     bool improved = true;
@@ -288,7 +287,7 @@ int node_shift(vector<int>& tour, vector<vector<int>>& dm) {
     return capital_delta;
 }
 
-int two_opt(vector<int>& tour, vector<vector<int>>& dm) {
+int two_opt(vector<int>& tour, const vector<vector<int>>& dm) {
     int n = tour.size();
 
     bool improved = true;
@@ -333,7 +332,7 @@ int two_opt(vector<int>& tour, vector<vector<int>>& dm) {
 }
 
 
-int two_opt(tour_o& tour, vector<vector<int>>& dm) {
+int two_opt(tour_o& tour, const vector<vector<int>>& dm) {
 
     int n = tour.size();
 
@@ -379,7 +378,7 @@ int two_opt(tour_o& tour, vector<vector<int>>& dm) {
 }
 
 
-int two_opt_nn(vector<int>& tour, vector<vector<int>>& dm, vector<vector<int>> nm, vector<set<int>>& ns) {
+int two_opt_nn(vector<int>& tour, const vector<vector<int>>& dm, vector<vector<int>> nm, vector<set<int>>& ns) {
     int n = tour.size();
 
     bool improved = true;
@@ -432,7 +431,7 @@ int two_opt_nn(vector<int>& tour, vector<vector<int>>& dm, vector<vector<int>> n
 
 
 
-int two_opt_nn(tour_o tour, vector<vector<int>>& dm, vector<vector<int>> nm, vector<set<int>>& ns) {
+int two_opt_nn(tour_o tour, const vector<vector<int>>& dm, vector<vector<int>> nm, vector<set<int>>& ns) {
     int n = tour.size();
 
     bool improved = true;
@@ -487,7 +486,7 @@ int two_opt_nn(tour_o tour, vector<vector<int>>& dm, vector<vector<int>> nm, vec
 
 
 //TOFIX - Not working! It needs a map from ids to pos
-int two_opt_no_look(vector<int>& tour, vector<vector<int>>& dm) {
+int two_opt_no_look(vector<int>& tour, const vector<vector<int>>& dm) {
     int n = tour.size();
 
     bool improved = true;
@@ -539,7 +538,7 @@ int two_opt_no_look(vector<int>& tour, vector<vector<int>>& dm) {
 
 
 //Not working, indices have many errors.
-int or_opt(vector<int>& tour, vector<vector<int>>& dm) {
+int or_opt(vector<int>& tour, const vector<vector<int>>& dm) {
     int n = tour.size();
 
     bool improved = true;
@@ -600,7 +599,7 @@ int or_opt(vector<int>& tour, vector<vector<int>>& dm) {
 
 
 
-int local_two_opt(vector<int>& tour, vector<vector<int>>& dm, int parts) {
+int local_two_opt(vector<int>& tour, const vector<vector<int>>& dm, int parts) {
     int n = tour.size();
 
     bool improved = true;
@@ -649,7 +648,7 @@ int local_two_opt(vector<int>& tour, vector<vector<int>>& dm, int parts) {
 }
 
 //Calculates change wrong
-int three_opt(vector<int>& tour, vector<vector<int>>& dm) {
+int three_opt(vector<int>& tour, const vector<vector<int>>& dm) {
     int n = tour.size();
 
     bool improved = true;
@@ -822,11 +821,10 @@ int two_opt_move(tour_o& tour, vector<vector<int>> dm, int i, int j) {
     return delta;
 }
 
-vector<int> k_opt(vector<int> tour, vector<vector<int>> dm, vector<vector<int>> nm, vector<set<int>> ns, int depth) {
+vector<int> k_opt(vector<int> tour, const vector<vector<int>>& dm, const vector<vector<int>>& nm, const vector<set<int>>& ns, int depth) {
     // 4 3 2 scheme
 
     int ts = tour.size();
-    int nbors = nm.size();
     assert(ts >= 1);
     vector<int> new_tour(tour);
     int delta = 0;
@@ -853,14 +851,16 @@ vector<int> k_opt(vector<int> tour, vector<vector<int>> dm, vector<vector<int>> 
     //delta += two_opt_nn(new_tour, dm, nm, ns);
     delta += two_opt(new_tour, dm);
     delta += node_shift(new_tour, dm);
+    /*
     if (tour.size() < 200) {
         delta += three_opt(new_tour, dm);
     }
+    */
 
     #if VERBOSE == 1
     auto t2 = chrono::high_resolution_clock::now();
     chrono::duration<double, milli> time_since = t2 - t1;
-    //cout << "two opt took " << time_since.count() << endl;
+    cout << "two opt took " << time_since.count() << endl;
     #endif
 
     //cout << tour_distance(tour, dm) << " " <<  tour_distance(saved_tour, dm) << " " << delta;
@@ -880,7 +880,7 @@ vector<int> k_opt(vector<int> tour, vector<vector<int>> dm, vector<vector<int>> 
 }
 
 
-tour_o k_opt(tour_o tour, vector<vector<int>> dm, vector<vector<int>> nm, vector<set<int>> ns, int depth) {
+tour_o k_opt(tour_o tour, const vector<vector<int>>& dm, const vector<vector<int>>& nm, const vector<set<int>>& ns, int depth) {
     // 4 3 2 scheme
 
     int ts = tour.size();
@@ -1066,19 +1066,18 @@ int main(int argc, char *argv[]) {
     }
 
     //TOFIX constructor
-    tour_o tour_ = tour_o(n);    
+
     tour = greedy_tour(dm);
 
     two_opt(tour, dm);
+    /*
     if (n < 200) {
         three_opt(tour, dm);
     }
+    */
     node_shift(tour, dm);
 
-    //TOFIX this should work
-    for (int i = 0; i < n; i++){
-        tour_.set(i, tour[i]);
-    }
+
 
     //greedy_tour(&tour, dm);
 
@@ -1129,7 +1128,7 @@ int main(int argc, char *argv[]) {
         #endif
 
         //or_opt(tour, dm);
-        if (time_since.count() > 1900) {
+        if (time_since.count() > 1890) {
             break;
         }
         #if VERBOSE == 1
