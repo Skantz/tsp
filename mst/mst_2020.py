@@ -14,6 +14,9 @@ SOME_BIG_CONSTANT    = 1500
 memos = {}
 sg_memos = {}
 
+global read_nodes
+read_nodes = 0
+
 
 def query_node_local(n):
     nbors = G.neighbors(n)
@@ -51,7 +54,9 @@ def query_node(n):
 
             #print("i", i, "len inp", len(inp), "inp", inp)
             memos[n].append((int(inp[i]), int(inp[i + 1])))
-        
+
+        global read_nodes        
+        read_nodes += 1
         return memos[n]
 
 
@@ -66,11 +71,11 @@ def approx_cc_simple(n, gi, eps, max_w, d_bar, max_nodes, time_limit=None, start
     i = 0
     betas = [0 for _ in range(max_w)]
 
-    read_nodes = 0
+    #read_nodes = 0
 
     sampled = False
 
-    while i < r:
+    while i < r or True:
         if (time.time() - start_time) > time_limit:
             break
 
@@ -91,8 +96,9 @@ def approx_cc_simple(n, gi, eps, max_w, d_bar, max_nodes, time_limit=None, start
         else:
             u = random.choice(list(memos.keys()))
 
-        read_nodes += 1
+        #read_nodes += 1
         if read_nodes >= max_nodes:
+            i -= 1
             break
 
         X = int(1/random.random())
@@ -106,8 +112,9 @@ def approx_cc_simple(n, gi, eps, max_w, d_bar, max_nodes, time_limit=None, start
             u_nbors = [v for v in query_node(u) if v[0] != u and v[1] <= w]
             u_nbors = list(set(u_nbors))
 
-            read_nodes += 1
+            #read_nodes += 1
             if read_nodes >= max_nodes:
+                #i -= 1
                 break
 
             du = len(u_nbors)
@@ -140,6 +147,9 @@ def approx_cc_simple(n, gi, eps, max_w, d_bar, max_nodes, time_limit=None, start
                 visited_nodes.add(v[0])
                 v_nbors = query_node(v[0])
                 #v_nbors = sorted(v_nbors, key=lambda x: x[0] in memos, reverse=True)
+                if read_nodes >= max_nodes:
+                    #i -= 1
+                    break
                 added = False
                 for t in v_nbors:
                     seen_edges.add((v[0], t[0]))
@@ -174,8 +184,8 @@ def approx_mst(n, eps, max_w, max_nodes):
     c_bars = []
 
     #eps = eps / (1 + 0.5 * max_w)
-    eps = eps / (1 + 0.5 * max_w)
-    max_nodes = max_nodes  * 10
+    #eps = eps / (1 + 0.5 * max_w)
+    max_nodes = max_nodes  * 1
 
     if max_w > 1:
         #c_bars = approx_cc_simple(n, max_w, eps/2.5, max_w, d_bar, time_limit=2.9, start_time=time.time(), read_new_verts=True)
