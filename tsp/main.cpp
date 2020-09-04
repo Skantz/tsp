@@ -1,3 +1,5 @@
+
+
 #include <iostream>
 #include <sstream>
 #include <istream>
@@ -15,6 +17,7 @@ using namespace std;
 
 #define DEBUG   0
 #define VERBOSE 0
+#define TIME_LIMIT 1890
 
 struct tour_o {
 
@@ -647,6 +650,7 @@ int local_two_opt(vector<int>& tour, const vector<vector<int>>& dm, int parts) {
 }
 
 //Calculates change wrong
+//?
 int three_opt(vector<int>& tour, const vector<vector<int>>& dm) {
     int n = tour.size();
 
@@ -772,6 +776,105 @@ int two_opt_move(vector<int>& tour, vector<vector<int>> dm, int i, int j) {
 
 
 
+
+int three_opt_move(vector<int>& tour, vector<vector<int>> dm, int i, int j, int k) {
+
+    int a, b, c, d, e, f;
+    a = tour[i - 1];
+    b = tour[i];
+    c = tour[j - 1];
+    d = tour[j];
+    e = tour[k - 1];
+    f = tour[k];
+
+
+    int d0 = dm[a][b] + dm[c][d] + dm[e][f];
+    int d1 = dm[a][c] + dm[b][d] + dm[e][f];
+    int d2 = dm[a][b] + dm[c][e] + dm[d][f];
+    int d3 = dm[a][d] + dm[e][b] + dm[c][f];
+    int d4 = dm[f][b] + dm[c][d] + dm[e][a];
+
+    int delta = 0;
+
+    #if DEBUG == 1
+    double old_cost = tour_distance(tour, dm);
+    //cout << d0 << " " << d1 << " " << d2 << " " << d3 << " " << d4 << endl;
+    #endif
+
+    int case_1 = -d0 + d1;
+    int case_2 = -d0 + d2;
+    int case_3 = -d0 + d3;
+    int case_4 = -d0 + d4;
+    
+    if (case_1 < min(case_2, min(case_3, case_4))) {
+        std::reverse(tour.begin() + i, tour.begin() + j );
+        delta = -d0 + d1;
+    }
+    else if (case_2 < min(case_3, case_4)) {
+        std::reverse(tour.begin() + j, tour.begin() + k );
+        delta = -d0 + d2;
+    }
+                   
+    else if (case_3 < case_4) {
+        vector<int> t;
+        t.clear();
+        for (int iter = j; iter < k; iter++) {
+            t.push_back(tour[iter]);
+        }
+        for (int iter = i; iter < j; iter++) {
+            t.push_back(tour[iter]);
+        }
+        int iter = i;
+        for (auto& n: t) {
+            tour[iter] = n;
+            iter++;
+        }
+        delta = -d0 + d3;
+        #if DEBUG == 1
+        assert(all_different(tour));
+        #endif
+        }
+                   
+    else {
+        std::reverse(tour.begin() + i, tour.begin() + k );
+        delta = -d0 + d4;
+    }
+    return delta;      
+}
+
+
+
+    /*
+    #if DEBUG == 1
+    vector<int> saved_tour(tour);
+    #endif
+
+    int n = tour.size();
+    
+    int i_m = mod((i - 1), n);
+    int j_p = mod((j + 1), n);  
+
+    int cost_1 = dm[tour[i_m]][tour[i]];
+    int cost_2 = dm[tour[j]][tour[j_p]];
+
+    int new_cost_1 = dm[tour[i]][tour[j_p]];
+    int new_cost_2 = dm[tour[i_m]][tour[j]];
+
+    int delta = (new_cost_1 + new_cost_2) - (cost_1 + cost_2);
+
+    std::reverse(tour.begin() + i , tour.begin() + j + 1);
+
+    #if DEBUG == 1
+    assert(tour_distance(tour, dm) ==  delta + tour_distance(saved_tour, dm));
+    if (delta < 0) assert(tour_distance(tour, dm) < tour_distance(saved_tour, dm));
+    #endif
+
+    return delta;
+    */
+
+
+
+
 int two_opt_move(tour_o& tour, vector<vector<int>> dm, int i, int j) {
 
 
@@ -829,17 +932,23 @@ vector<int> k_opt(vector<int> tour, const vector<vector<int>>& dm, const vector<
     int delta = 0;
     int a;
     int b;
-
+    int c;
     for (int i = 0; i < depth; i++) {
         //a = b;
         b = ts - 1;
         //TOFIX: allow a == 0
 
-        a = 1 + (int) ((ts - 1) * (rand() / (RAND_MAX + 1.0)));
+        a = 1 + (int) ((ts - 3) * (rand() / (RAND_MAX + 1.0)));
+        c = 1 + (int) ((a - 3) * (rand () / (RAND_MAX + 1.0)));
         //a = 0 + (int) ((nbors - 1) * (rand() / (RAND_MAX + 1.0)));
         //a = nm[b][a] + 1;
         //a = rand() %
-        delta += two_opt_move(new_tour, dm, a, b);
+        if (c < 1)
+            delta += two_opt_move(new_tour, dm, a, b);
+
+        else
+            delta += three_opt_move(new_tour, dm, c, a, b);
+      
         if (delta < 0) {return tour;}
     }
 
@@ -850,9 +959,11 @@ vector<int> k_opt(vector<int> tour, const vector<vector<int>>& dm, const vector<
     //delta += two_opt_nn(new_tour, dm, nm, ns);
     delta += two_opt(new_tour, dm);
     delta += node_shift(new_tour, dm);
+    /*
     if (tour.size() < 200) {
         delta += three_opt(new_tour, dm);
     }
+    */
 
     #if VERBOSE == 1
     auto t2 = chrono::high_resolution_clock::now();
@@ -869,7 +980,7 @@ vector<int> k_opt(vector<int> tour, const vector<vector<int>>& dm, const vector<
         #endif
         tour = new_tour;
         #if DEBUG == 1
-        assert(tour_distance(tour, dm) < tour_distance(saved_tour, dm));
+        //assert(tour_distance(tour, dm) < tour_distance(saved_tour, dm));
         #endif
     }
     
@@ -904,7 +1015,6 @@ tour_o k_opt(tour_o tour, const vector<vector<int>>& dm, const vector<vector<int
     //cout << tour_distance(tour, dm) << " " <<  tour_distance(new_tour, dm) << " " << delta << endl;
     //cout << "Kopt delta " << delta << endl;
 
-    //delta += two_opt_nn(new_tour, dm, nm, ns);
     delta += two_opt(new_tour, dm);
 
     #if VERBOSE == 1
@@ -958,6 +1068,7 @@ vector<int> anneal(vector<int> tour, vector<vector<int>> dm, double time_limit) 
 
         int v1 = 1 + rand() % (n - 1);
         int u1 = 1 + rand() % (n - 1);
+       
         v1 = min(v1, u1);
         u1 = max(v1, u1);
 
@@ -999,7 +1110,6 @@ vector<int> anneal(vector<int> tour, vector<vector<int>> dm, double time_limit) 
             continue;
         }            cost = tour_distance(tour, dm);
         */
-        
 
         int new_2opt = cost - gain_2opt + loss_2opt;
         double accept_p_2opt = exp(-(new_2opt - cost) / temperature);
@@ -1037,6 +1147,7 @@ vector<int> anneal(vector<int> tour, vector<vector<int>> dm, double time_limit) 
 }
 
 
+
 int main(int argc, char *argv[]) {
 
     srand( (unsigned)time(0) );
@@ -1051,8 +1162,6 @@ int main(int argc, char *argv[]) {
         points.push_back(val);
     }
 
-
-
     static vector<vector<int>> dm = create_distance_matrix(points);
     static vector<vector<int>> nm = create_nearest_neighbor_matrix(dm, 10);
  
@@ -1063,25 +1172,22 @@ int main(int argc, char *argv[]) {
     }
 
     //TOFIX constructor
-    tour_o tour_ = tour_o(n);    
+
     tour = greedy_tour(dm);
 
     two_opt(tour, dm);
+    /*
     if (n < 200) {
         three_opt(tour, dm);
     }
+    */
     node_shift(tour, dm);
-
-    //TOFIX this should work
-    for (int i = 0; i < n; i++){
-        tour_.set(i, tour[i]);
-    }
 
     //greedy_tour(&tour, dm);
 
     #if DEBUG == 1
-    assert(tour_.id.size() == n);
-    assert(tour_.pos.size() == n);
+    //assert(tour_.id.size() == n);
+    //assert(tour_.pos.size() == n);
     #endif
 
     auto t1 = chrono::high_resolution_clock::now();
@@ -1099,18 +1205,22 @@ int main(int argc, char *argv[]) {
             ns[i].insert(n);
         }
     }
+    int depth = 2;
 
-    int depth = 3;
     int i = 0;
 
     #if VERBOSE == 1
-    cout << "Start optimize, cost is " << tour_distance(tour, dm) << endl;
-    cout << "(Cost of normal tour was " << tour_distance(tour_, dm) << endl;
+    cout << "Start optimize, cost is "   << tour_distance(tour, dm)  << endl;
+    //cout << "(Cost of normal tour was) " << tour_distance(tour_, dm) << endl;
     #endif
 
     while (true) {
 
+        //tour = k_opt(tour, dm, nm, ns, depth);
         tour = k_opt(tour, dm, nm, ns, depth);
+        for (int i = 0; i < 1 && 8 - n > 10; i++) {
+            lk(tour, dm, 8);
+        }
         //tour = anneal(tour, dm, 1700);
         //two_opt(tour, dm);
 
@@ -1126,15 +1236,22 @@ int main(int argc, char *argv[]) {
         #endif
 
         //or_opt(tour, dm);
-        if (time_since.count() > 1900) {
+        #if TIME_LIMIT > 0
+        if (time_since.count() > TIME_LIMIT) {
+            break;
+        }       
+        #endif
+        #if TIME_LIMIT <= 0
+        if (time_since.count() > 1740) {
             break;
         }
+        #endif
         #if VERBOSE == 1
         i++;
         #endif
     }
 
-    two_opt(tour, dm);
+    //two_opt(tour, dm);
 
     #if VERBOSE == 1
     cout << tour_distance(tour, dm) << endl;
@@ -1150,3 +1267,4 @@ int main(int argc, char *argv[]) {
   return 0;
 
 }
+
