@@ -5,25 +5,31 @@ import time
 from queue import Queue
 from math import log10, log2
 
+#If we want to read local graphs (refer to the ipynb nobtebook)
 DEBUG = 0
 
+#Not signifcant
 RANDOM_SAMPLE_FACTOR = 0.5
 SOME_BIG_CONSTANT    = 1500
 
-#Vertex to [(neighbor, edge weight), ... ]
+#Memoize to save reads
 memos = {}
+#Unused
 sg_memos = {}
 
+#Tracking read node counts from all functions
 global read_nodes
 read_nodes = 0
 
 
 def query_node_local(n):
+    """ Read a node locally from a NetworkX graph G """
     nbors = G.neighbors(n)
     return [(n2, G.edges[n, n2]["weight"]) for n2 in nbors]
 
-
+#Unused
 def query_node_in_subgraph_n(n, w):
+    """ Query a node in the induced subraph with edge weight restrictions """
     if (n, w) not in memos:
         u_nbors = [v for v in query_node(n) if v[0] != n and v[1] <= w]
         u_nbors = list(set(u_nbors))
@@ -32,8 +38,9 @@ def query_node_in_subgraph_n(n, w):
     else:
         return memos[(n, w)]
 
-
+#Return memoization if exists, otherwise ask for a new node
 def query_node(n):
+    """Return memoization of neighbors if exists, otherwise query node from stdio"""
 
     if DEBUG:
         return query_node_local(n)
@@ -62,6 +69,7 @@ def query_node(n):
 
 
 def approx_cc_simple(n, gi, eps, max_w, d_bar, max_nodes, time_limit=None, start_time=None, read_new_verts=True, sample_size=0.5):
+    """ Approximate a minimum spanning forest """
 
     #If eps > 1, still sample some constant or fraction
     r = 5*min(1000, log10(n)) + int(RANDOM_SAMPLE_FACTOR/eps**2) #RANDOM_SAMPLE_FACTOR)
@@ -69,41 +77,35 @@ def approx_cc_simple(n, gi, eps, max_w, d_bar, max_nodes, time_limit=None, start
     betas = 0
     
     i = 0
+
+    #The numbber of components estimated for each weight restriction w <= 1, 2, ...
     betas = [0 for _ in range(max_w)]
 
     #read_nodes = 0
 
     sampled = False
 
-    while i < r or True:
+    # Sample nodes until we hit the node limit
+    while True:
         if (time.time() - start_time) > time_limit:
             break
 
-        #if i > 0 and (i % r*sample_size) == 0 and sampled == False:
-        if i == r - 1:
-            sampled = True
-            checkpoint_score = sum([n / i * betas[j] for j in range(max_w)])
-            if checkpoint_score < n/2 or checkpoint_score > max_w * n:
-                r *= 2
-                continue
-            #r *= max(1, log2(betas[-1]))
-
-
         i += 1
 
+        # Unused. We always read new vertices.
         if read_new_verts:
             u = random.randint(0, n - 1)
         else:
             u = random.choice(list(memos.keys()))
 
-        #read_nodes += 1
+
         if read_nodes >= max_nodes:
             i -= 1
             break
 
+        #Randomly select the number of nodes sampled according to Pr[X] <= x = 1 - 1/k
         X = int(1/random.random())
 
-        #betas[i] = 0
         for w in range(max_w, 0, -1):
             visited_nodes = set()
             visited_nodes.add(u)
@@ -112,9 +114,8 @@ def approx_cc_simple(n, gi, eps, max_w, d_bar, max_nodes, time_limit=None, start
             u_nbors = [v for v in query_node(u) if v[0] != u and v[1] <= w]
             u_nbors = list(set(u_nbors))
 
-            #read_nodes += 1
             if read_nodes >= max_nodes:
-                #i -= 1
+                #i -= 1    #Off-by-ones
                 break
 
             du = len(u_nbors)
@@ -136,7 +137,8 @@ def approx_cc_simple(n, gi, eps, max_w, d_bar, max_nodes, time_limit=None, start
             
             #Constant lookup for processed nodes
             added_to_queue = set([u])
-            
+           
+            #bfs
             while not u_nbors_queue.empty():
                 if (time.time() - start_time) > time_limit:
                     break
@@ -158,13 +160,14 @@ def approx_cc_simple(n, gi, eps, max_w, d_bar, max_nodes, time_limit=None, start
                         added_to_queue.add(t[0])
 
 
-
+                #One of these conditions implies the others
                 if j > X or len(visited_nodes) > X or len(added_to_queue) > X:
                     break            
 
                 if u_nbors_queue.empty():
                     betas[w - 1] += 2**heads 
 
+                    #1/2 chance to keep going. This might improve accuracy on dense graphs
                     toss = random.randint(0, 1)
                     if toss == 0:
                         break
@@ -183,17 +186,14 @@ def approx_mst(n, eps, max_w, max_nodes):
     d_bar = 0
     c_bars = []
 
-    #eps = eps / (1 + 0.5 * max_w)
-    #eps = eps / (1 + 0.5 * max_w)
     max_nodes = max_nodes  * 1
 
-    if max_w > 1:
-        #c_bars = approx_cc_simple(n, max_w, eps/2.5, max_w, d_bar, time_limit=2.9, start_time=time.time(), read_new_verts=True)
-        c_bars = approx_cc_simple(n, max_w, eps, max_w, d_bar, max_nodes, time_limit=8.8, start_time=time.time(), read_new_verts=True)
-    else:
-        c_bars = approx_cc_simple(n, max_w, eps/10, max_w, d_bar, max_nodes, time_limit=8.8, start_time=time.time(), read_new_verts=True)
+    #Several of these parameters are not used.
+    c_bars = approx_cc_simple(n, max_w, eps, max_w, d_bar, max_nodes, time_limit=8.8, start_time=time.time(), read_new_verts=True)
 
+    #We can't have fractional components
     c_bars = [min(n, max(1, round(bar))) for bar in c_bars]
+    #We have at least one component without weight restriction
     c_bars[-1] = max(c_bars[-1], 1)
 
     if DEBUG == 1:
@@ -206,34 +206,27 @@ def approx_mst(n, eps, max_w, max_nodes):
 
 if not DEBUG:
     n = int(input())
-    #eps = float(input()) - 1
     eps = 0.1
     max_w = int(input())
     max_nodes = int(input()) - 1
 
-#All groups have some eps > 1 (first 6 problems)
-#Probably eps is between 0 and 0.5
 
-
+#Trivial cases
 if n < 2:
     print("end " + str(0))
-
 if max_w < 1:
     print("end " + str(0))
 
 
-#Group 6 has max_w > 50
-#if max_w > 50:
-#    1/0
-
-
 mst = approx_mst(n, eps, max_w, max_nodes)
+
+#A minimum spanning tree can't have less or more weight than this
 mst = max(n/2, mst)
 mst = min((n - 1) * max_w, mst)
 
 print("end " + str(mst))
 sys.stdout.flush()
 
-
+#Debug prints for local tests
 if DEBUG == 1:
     print("gt end", mst_gt_w)
