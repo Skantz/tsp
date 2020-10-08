@@ -21,22 +21,12 @@ sg_memos = {}
 global read_nodes
 read_nodes = 0
 
-
+# See notebook for local testing
 def query_node_local(n):
     """ Read a node locally from a NetworkX graph G """
     nbors = G.neighbors(n)
     return [(n2, G.edges[n, n2]["weight"]) for n2 in nbors]
 
-#Unused
-def query_node_in_subgraph_n(n, w):
-    """ Query a node in the induced subraph with edge weight restrictions """
-    if (n, w) not in memos:
-        u_nbors = [v for v in query_node(n) if v[0] != n and v[1] <= w]
-        u_nbors = list(set(u_nbors))
-        memos[(n, w)] = u_nbors
-        return memos[(n, w)]
-    else:
-        return memos[(n, w)]
 
 #Return memoization if exists, otherwise ask for a new node
 def query_node(n):
@@ -59,7 +49,7 @@ def query_node(n):
 
         for i in range(0, len(inp), 2):
 
-            #print("i", i, "len inp", len(inp), "inp", inp)
+            #A neigbor list of edges : tuples (node, weight)
             memos[n].append((int(inp[i]), int(inp[i + 1])))
 
         global read_nodes        
@@ -72,7 +62,6 @@ def approx_cc_simple(n, gi, eps, max_w, d_bar, max_nodes, time_limit=None, start
     """ Approximate a minimum spanning forest """
 
     #If eps > 1, still sample some constant or fraction
-    r = 5*min(1000, log10(n)) + int(RANDOM_SAMPLE_FACTOR/eps**2) #RANDOM_SAMPLE_FACTOR)
 
     betas = 0
     
@@ -93,17 +82,13 @@ def approx_cc_simple(n, gi, eps, max_w, d_bar, max_nodes, time_limit=None, start
         i += 1
 
         # Unused. We always read new vertices.
-        if read_new_verts:
-            u = random.randint(0, n - 1)
-        else:
-            u = random.choice(list(memos.keys()))
-
+        u = random.randint(0, n - 1)
 
         if read_nodes >= max_nodes:
             i -= 1
             break
 
-        #Randomly select the number of nodes sampled according to Pr[X] <= x = 1 - 1/k
+        #Randomly select the number of nodes sampled according to Pr[X] <= x = 1 - 1/x
         X = int(1/random.random())
 
         for w in range(max_w, 0, -1):
@@ -178,6 +163,7 @@ def approx_cc_simple(n, gi, eps, max_w, d_bar, max_nodes, time_limit=None, start
     if i <= 1:
         return [0 for _ in range(max_w)]
 
+    #If we find a component each time, i = betas[j] for all j.
     return [n / i * betas[j] for j in range(max_w)]
 
 
@@ -205,9 +191,9 @@ def approx_mst(n, eps, max_w, max_nodes):
 
 
 if not DEBUG:
-    n = int(input())
+    n = int(input()) # -> 2^32
     eps = 0.1
-    max_w = int(input())
+    max_w = int(input()) # 1 -> 50
     max_nodes = int(input()) - 1
 
 
