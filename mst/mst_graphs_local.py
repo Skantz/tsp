@@ -19,7 +19,7 @@ class NetworkXGraph(Graph):
 
     def _query_platform(self, node: int) -> List[Tuple[int, int]]:
         return [
-            (neighbor, self.graph.edges[node, neighbor])
+            (neighbor, self.graph.edges[node, neighbor]['weight'])
             for neighbor in self.graph.neighbors(node)
         ]
 
