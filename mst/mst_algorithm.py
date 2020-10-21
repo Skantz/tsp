@@ -7,7 +7,7 @@ from mst_graphs import Graph, KattisGraph
 
 
 class MST:
-    """
+    """<
     Class providing functions for the MST algorithm
 
     :ivar graph: `Graph` instance to query
