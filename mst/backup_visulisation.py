@@ -37,7 +37,7 @@ class GraphVisualization:
 
         color_lookup = {k: 0 for v, k in enumerate(sorted(set(G.nodes())))}
         # {'A': 0, 'B': 1, 'C': 2, 'D': 3, 'E': 4, 'F': 5, 'J': 6, 'K': 7, 'Z': 8}
-
+        color_lookup[0] = 10
         # nx.draw_networkx(G)
         # plt.show()
         low, *_, high = sorted(color_lookup.values())
