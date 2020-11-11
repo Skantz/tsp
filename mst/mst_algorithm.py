@@ -4,6 +4,8 @@ from queue import Queue
 from typing import List
 
 from mst_graphs import Graph, KattisGraph
+import networkx as nx
+import matplotlib.pyplot as plt
 
 
 class MST:
@@ -57,6 +59,11 @@ class MST:
 
         G = self.graph
 
+        plt.figure(figsize=(18, 18))
+        nx.draw(G.graph, node_size=60)
+        plt.savefig("ba.png")
+        plt.show()
+        
         i = 0
 
         # The number of components estimated for each weight restriction w <= 1, 2, ...
