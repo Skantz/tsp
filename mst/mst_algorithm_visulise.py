@@ -3,7 +3,7 @@ import time
 from queue import Queue
 from typing import List
 
-from mst_graphs import Graph, KattisGraph
+from mst.mst_graphs import Graph, KattisGraph
 import networkx as nx
 import matplotlib.pyplot as plt
 
@@ -63,29 +63,6 @@ class MST:
         print("approx_conponents is called\n")
 
         G = self.graph
-
-        # plt.figure(figsize=(18, 18))
-        # nx.draw(G.graph, node_size=60)
-        # plt.savefig("ba.png")
-        # plt.show()
-
-
-
-        # nx.draw_networkx(G)
-        # plt.show()
-        # low, *_, high = sorted(color_lookup.values())
-        # norm = mpl.colors.Normalize(vmin=low, vmax=high, clip=True)
-        # mapper = mpl.cm.ScalarMappable(norm=norm, cmap=mpl.cm.coolwarm)
-        #
-        # rcParams['figure.figsize'] = 12, 7
-        # nx.draw(G.graph,
-        #         nodelist=color_lookup,
-        #         node_size=1000,
-        #         node_color=[mapper.to_rgba(i)
-        #                     for i in color_lookup.values()],
-        #         with_labels=True)
-        # plt.show()
-
 
         i = 0
 
