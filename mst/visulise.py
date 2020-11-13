@@ -15,12 +15,14 @@ class GraphType(Enum):
     EXPANDER = 'expander_graph'
     COMPLETE = 'complete_graph'
     CYCLE = 'cycle_graph'
+    VISUAL = 'visual_graph'
 
 
 class WeightDistribution(Enum):
     RANDOM = 'random_weights'
     EXPONENTIAL = 'exponantial_weights'
     NORMAL = 'normal_weights'
+    VISUAL = 'visual_weights'
 
 
 default_size = 100
@@ -67,6 +69,12 @@ def cycle_graph(size):
     graph = nx.generators.cycle_graph(size)
     return graph
 
+# Visual graph
+
+def visual_graph(size):
+    graph = nx.generators.complete_graph(size)
+    return graph
+
 # Assign edge weights
 
 def assign_random_edge_weights(graph, max_weight):
@@ -84,6 +92,10 @@ def assign_normal_edge_weights(graph, max_weight):
         graph.edges[u, v]['weight'] = round(np.random.normal(loc=(max_weight/2)))
     return graph
 
+def assign_visual_edge_weights(graph, max_weight):
+    for (u, v) in graph.edges():
+        graph.edges[u, v]['weight'] = random.randint(0, 9) % 3 + 1
+    return graph
 
 # Running against nx.kruskall
 
@@ -107,6 +119,8 @@ def kruskall_comparison(custom_size=default_size, degree=default_degree, max_rea
         graph = complete_graph(custom_size)
     elif graph_type is GraphType.CYCLE:
         graph = cycle_graph(custom_size)
+    elif graph_type is GraphType.VISUAL:
+        graph = visual_graph(custom_size)
 
     # Chose here different weight sampling options from above
     if weight_distribution is WeightDistribution.RANDOM:
@@ -115,6 +129,8 @@ def kruskall_comparison(custom_size=default_size, degree=default_degree, max_rea
         graph = assign_exponential_edge_weights(graph)
     elif weight_distribution is WeightDistribution.NORMAL:
         graph = assign_normal_edge_weights(graph, max_weight)
+    elif weight_distribution is WeightDistribution.VISUAL:
+        graph = assign_visual_edge_weights(graph, max_weight)
 
     # Our algorithm
     our_start_time = time.time()
@@ -151,7 +167,7 @@ def kruskall_comparison(custom_size=default_size, degree=default_degree, max_rea
     print("Results", results, "\n")
     return results
 
-result_single_custom = kruskall_comparison(custom_size=5, degree=2, max_read=3, max_weight=5, graph_type=GraphType.RANDOM,weight_distribution=WeightDistribution.NORMAL)
+result_single_custom = kruskall_comparison(custom_size=5, degree=2, max_read=3, max_weight=3, graph_type=GraphType.VISUAL,weight_distribution=WeightDistribution.VISUAL)
 
 
 
