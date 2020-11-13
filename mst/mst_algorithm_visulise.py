@@ -66,8 +66,8 @@ class MST:
 
         G = self.graph
         for i in range(5):
-            G.graph.nodes[i]["x-coord"] = random.randint(0, 100)
-            G.graph.nodes[i]["y-coord"] = random.randint(0, 100)
+            G.graph.nodes[i]["x-coord"] = 10 * i
+            G.graph.nodes[i]["y-coord"] = -1 * i * i + 4 * i + 4
 
         i = 0
 
@@ -121,18 +121,10 @@ class MST:
                     print(bfs_counter)
 
                     node = nodes_queue.get()
-                    color_lookup[node] = 10
-
-                    print('color lookup is')
-                    print(color_lookup)
 
                     #### setting labels
                     labels_lookup[node] = str(bfs_counter)
                     #### end setting labels
-
-                    low, *_, high = sorted(color_lookup.values())
-                    norm = mpl.colors.Normalize(vmin=low, vmax=high, clip=True)
-                    mapper = mpl.cm.ScalarMappable(norm=norm, cmap=mpl.cm.coolwarm)
 
 
                     # pos = nx.get_node_attributes(G.graph, 'pos')
@@ -146,39 +138,23 @@ class MST:
                     atest = G.graph.nodes().data()
                     pos = {node[0]: (node[1]['x-coord'], node[1]['y-coord']) for node in G.graph.nodes(data=True)}
 
-                    time.sleep(1)
-
-
-                    #### draw
-                    # node_colour = [mapper.to_rgba(i) for i in color_lookup.values()]
-                    # node_colour[0] = (1,1,0)
-                    # labels = nx.get_edge_attributes(G.graph, 'weight')
-                    # nx.draw_networkx_nodes(G.graph, pos, node_size=200)
-                    # nx.draw_networkx_edges(G.graph, pos, edgelist=G.graph.edges(data=True))
-                    # nx.draw_networkx_labels(G.graph, pos, labels_lookup, font_size=20, font_color='white')
-                    # nx.draw_networkx_edge_labels(G.graph, pos, edge_labels=labels)
-                    # plt.show()
-                    # ######
-                    edge_labels = nx.get_edge_attributes(G.graph, 'weight')
                     nx.draw(G.graph, pos=pos, node_size=20, alpha=0.3)
+                    edge_labels = nx.get_edge_attributes(G.graph, 'weight')
                     nx.draw_networkx_edge_labels(G.graph, pos, edge_labels=edge_labels, alpha=0.3)
                     plt.show()
+                    time.sleep(1)
 
-
-                    for neighbor in G.query(node):
+                    node_to_query = node
+                    for neighbor in G.query(node_to_query):
                         if neighbor[0] not in queued_nodes and neighbor[1] <= weight:
 
-
+                            edge_list[weight].append([node_to_query, neighbor[0]])
                             node = neighbor[0]
                             print('Sampling node' + str(node))
-                            edge_list[weight].append(neighbor)
+
 
                             bfs_counter += 1
-                            color_lookup[node] = 10
-                            labels_lookup[node] = str(bfs_counter)
 
-                            print('color lookup is')
-                            print(color_lookup)
 
                             #### draw
                             # node_colour = [mapper.to_rgba(i) for i in color_lookup.values()]
@@ -190,23 +166,8 @@ class MST:
                             # plt.show()
                             ######
 
-
-
                             nodes_queue.put(neighbor[0])
                             queued_nodes.add(neighbor[0])
-
-                            # color_lookup[neighbor[0]] = 10
-                            # low, *_, high = sorted(color_lookup.values())
-                            # norm = mpl.colors.Normalize(vmin=low, vmax=high, clip=True)
-                            # mapper = mpl.cm.ScalarMappable(norm=norm, cmap=mpl.cm.coolwarm)
-                            #
-                            # nx.draw(G.graph,
-                            #         nodelist=color_lookup,
-                            #         node_size=100,
-                            #         node_color=[mapper.to_rgba(i)
-                            #                     for i in color_lookup.values()],
-                            #         with_labels=True)
-                            # plt.show()
 
 
                     if len(queued_nodes) > X:
@@ -218,12 +179,17 @@ class MST:
                 print('############################# Finished BFS ############################# \n')
                 print(weight)
                 print(edge_list)
-                g_odd_complete_min_edges = nx.Graph(edge_list[5])
+                g_odd_complete_min_edges = nx.Graph(edge_list[weight])
 
                 nx.draw(G.graph, pos=pos, node_size=20, alpha=0.05)
                 nx.draw(g_odd_complete_min_edges, pos=pos, node_size=20, edge_color='blue', node_color='red')
+
+                edge_labels = nx.get_edge_attributes(G.graph, 'weight')
+                nx.draw_networkx_edge_labels(G.graph, pos, edge_labels=edge_labels, alpha=0.3)
+                print('w ==' + str(weight))
+                plt.text(0, 7.8, "weight == "+str(weight))
                 plt.show()
-                time.sleep(100)
+                time.sleep(3)
 
         print('time up')
         print(time.time() - self.start_time)
