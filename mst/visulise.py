@@ -167,7 +167,7 @@ def kruskall_comparison(custom_size=default_size, degree=default_degree, max_rea
     print("Results", results, "\n")
     return results
 
-result_single_custom = kruskall_comparison(custom_size=5, degree=2, max_read=3, max_weight=3, graph_type=GraphType.VISUAL,weight_distribution=WeightDistribution.VISUAL)
+result_single_custom = kruskall_comparison(custom_size=5, degree=2, max_read=3, max_weight=3, graph_type=GraphType.CYCLE,weight_distribution=WeightDistribution.VISUAL)
 
 
 
