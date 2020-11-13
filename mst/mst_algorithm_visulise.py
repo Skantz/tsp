@@ -179,17 +179,23 @@ class MST:
                 print('############################# Finished BFS ############################# \n')
                 print(weight)
                 print(edge_list)
-                g_odd_complete_min_edges = nx.Graph(edge_list[weight])
 
-                nx.draw(G.graph, pos=pos, node_size=20, alpha=0.05)
-                nx.draw(g_odd_complete_min_edges, pos=pos, node_size=20, edge_color='blue', node_color='red')
+                # plot BFS for w == 5
+                for i in range(len(edge_list[weight])):
+                    edges_to_plot = edge_list[weight]
+                    edges_to_plot = edges_to_plot[0:i+1]
 
-                edge_labels = nx.get_edge_attributes(G.graph, 'weight')
-                nx.draw_networkx_edge_labels(G.graph, pos, edge_labels=edge_labels, alpha=0.3)
-                print('w ==' + str(weight))
-                plt.text(0, 7.8, "weight == "+str(weight))
-                plt.show()
-                time.sleep(3)
+                    g_odd_complete_min_edges = nx.Graph(edges_to_plot)
+                    nx.draw(G.graph, pos=pos, node_size=20, alpha=0.05)
+                    nx.draw(g_odd_complete_min_edges, pos=pos, node_size=20, edge_color='blue', node_color='red')
+
+                    edge_labels = nx.get_edge_attributes(G.graph, 'weight')
+                    nx.draw_networkx_edge_labels(G.graph, pos, edge_labels=edge_labels, alpha=0.3)
+                    print('w ==' + str(weight))
+                    plt.text(0, 7.8, "weight == "+str(weight))
+                    plt.show()
+                    time.sleep(1)
+                # Finish plot BFS for w == 5
 
         print('time up')
         print(time.time() - self.start_time)
