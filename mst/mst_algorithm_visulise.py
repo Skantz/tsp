@@ -62,7 +62,12 @@ class MST:
         """
         print("approx_conponents is called\n")
 
+        edge_list = [[], [], [], [], [], []]
+
         G = self.graph
+        for i in range(5):
+            G.graph.nodes[i]["x-coord"] = random.randint(0, 100)
+            G.graph.nodes[i]["y-coord"] = random.randint(0, 100)
 
         i = 0
 
@@ -132,23 +137,32 @@ class MST:
 
                     # pos = nx.get_node_attributes(G.graph, 'pos')
                     # pos = nx.spring_layout(G.graph)  # positions for all nodes
-                    pos = dict()
-                    pos[0] = [0, 0]
-                    pos[1] = [2, 2]
-                    pos[2] = [2, 0]
-                    pos[3] = [0, 2]
-                    pos[4] = [1, 1]
+                    # pos = dict()
+                    # pos[0] = [0, 0]
+                    # pos[1] = [2, 2]
+                    # pos[2] = [2, 0]
+                    # pos[3] = [0, 2]
+                    # pos[4] = [1, 1]
+                    atest = G.graph.nodes().data()
+                    pos = {node[0]: (node[1]['x-coord'], node[1]['y-coord']) for node in G.graph.nodes(data=True)}
+
+                    time.sleep(1)
 
 
                     #### draw
-                    node_colour = [mapper.to_rgba(i) for i in color_lookup.values()]
-                    labels = nx.get_edge_attributes(G.graph, 'weight')
-                    nx.draw_networkx_nodes(G.graph, pos, node_size=200, node_color=node_colour)
-                    nx.draw_networkx_edges(G.graph, pos, edgelist=G.graph.edges(data=True))
-                    nx.draw_networkx_labels(G.graph, pos, labels_lookup, font_size=20, font_color='white')
-                    nx.draw_networkx_edge_labels(G.graph, pos, edge_labels=labels)
+                    # node_colour = [mapper.to_rgba(i) for i in color_lookup.values()]
+                    # node_colour[0] = (1,1,0)
+                    # labels = nx.get_edge_attributes(G.graph, 'weight')
+                    # nx.draw_networkx_nodes(G.graph, pos, node_size=200)
+                    # nx.draw_networkx_edges(G.graph, pos, edgelist=G.graph.edges(data=True))
+                    # nx.draw_networkx_labels(G.graph, pos, labels_lookup, font_size=20, font_color='white')
+                    # nx.draw_networkx_edge_labels(G.graph, pos, edge_labels=labels)
+                    # plt.show()
+                    # ######
+                    edge_labels = nx.get_edge_attributes(G.graph, 'weight')
+                    nx.draw(G.graph, pos=pos, node_size=20, alpha=0.3)
+                    nx.draw_networkx_edge_labels(G.graph, pos, edge_labels=edge_labels, alpha=0.3)
                     plt.show()
-                    ######
 
 
                     for neighbor in G.query(node):
@@ -157,6 +171,7 @@ class MST:
 
                             node = neighbor[0]
                             print('Sampling node' + str(node))
+                            edge_list[weight].append(neighbor)
 
                             bfs_counter += 1
                             color_lookup[node] = 10
@@ -166,14 +181,15 @@ class MST:
                             print(color_lookup)
 
                             #### draw
-                            node_colour = [mapper.to_rgba(i) for i in color_lookup.values()]
-                            labels = nx.get_edge_attributes(G.graph, 'weight')
-                            nx.draw_networkx_nodes(G.graph, pos, node_size=200, node_color=node_colour)
-                            nx.draw_networkx_edges(G.graph, pos, edgelist=G.graph.edges(data=True))
-                            nx.draw_networkx_labels(G.graph, pos, labels_lookup, font_size=20, font_color='white')
-                            nx.draw_networkx_edge_labels(G.graph, pos, edge_labels=labels)
-                            plt.show()
+                            # node_colour = [mapper.to_rgba(i) for i in color_lookup.values()]
+                            # labels = nx.get_edge_attributes(G.graph, 'weight')
+                            # nx.draw_networkx_nodes(G.graph, pos, node_size=200, node_color=node_colour)
+                            # nx.draw_networkx_edges(G.graph, pos, edgelist=G.graph.edges(data=True))
+                            # nx.draw_networkx_labels(G.graph, pos, labels_lookup, font_size=20, font_color='white')
+                            # nx.draw_networkx_edge_labels(G.graph, pos, edge_labels=labels)
+                            # plt.show()
                             ######
+
 
 
                             nodes_queue.put(neighbor[0])
@@ -200,6 +216,15 @@ class MST:
                         betas[weight - 1] += 1
                         break
                 print('############################# Finished BFS ############################# \n')
+                print(weight)
+                print(edge_list)
+                g_odd_complete_min_edges = nx.Graph(edge_list[5])
+
+                nx.draw(G.graph, pos=pos, node_size=20, alpha=0.05)
+                nx.draw(g_odd_complete_min_edges, pos=pos, node_size=20, edge_color='blue', node_color='red')
+                plt.show()
+                time.sleep(100)
+
         print('time up')
         print(time.time() - self.start_time)
         if i <= 1:
