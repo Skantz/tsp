@@ -21,10 +21,10 @@ def normalize(edge):
     return ((n1, n2, dist))
 
 
-edge_list = [(0, 1), (0, 2), (0, 3), (0, 4), (1, 2), (1, 3), (1, 4), (2, 3), (2, 4), (3, 4)]
+
+edge_list = [(1, 3), (1, 4), (3, 2), (4, 0), (2, 0)]
 g = nx.nx.Graph()
-g.add_weighted_edges_from(
-    [(0, 1, 3), (0, 2, 1), (0, 3, 1), (0, 4, 1), (1, 2, 1), (1, 3, 2), (1, 4, 3), (2, 3, 2), (2, 4, 2), (3, 4, 2)])
+g.add_weighted_edges_from([(1, 3, 2), (1, 4, 3), (3, 2, 1), (4, 0, 1), (2, 0, 1)])
 
 g_old = copy.deepcopy(g)
 # pos = nx.spring_layout(g)
@@ -83,7 +83,7 @@ nx.draw_networkx_edge_labels(g, pos, edge_labels=labels)
 plt.show()
 
 
-bfs_path_edges = [[0, 2], [0, 3], [0, 4], [4, 1], [4, 2], [4, 3]]
+bfs_path_edges = [[4, 0], [1, 3]]
 g_odd_complete_min_edges = nx.Graph(bfs_path_edges)
 labels = nx.get_edge_attributes(g_odd_complete_min_edges, 'weight')
 nx.draw_networkx_nodes(g_odd_complete_min_edges, pos, node_size=200, node_color='red')
@@ -130,6 +130,27 @@ for e in unique_edges:
 labels = nx.get_edge_attributes(g, 'weight')
 nx.draw_networkx_nodes(g, pos, node_size=200, node_color='gray')
 nx.draw_networkx_edges(g, pos, edgelist=g.edges(data=True))
+# nx.draw_networkx_labels(g, pos, labels_lookup, font_size=20, font_color='white')
+nx.draw_networkx_edge_labels(g, pos, edge_labels=labels)
+plt.show()
+
+
+bfs_path_edges = [[4, 0], [0, 2]]
+g_odd_complete_min_edges = nx.Graph(bfs_path_edges)
+g_odd_complete_min_edges.add_node(1)
+g_odd_complete_min_edges.add_node(3)
+labels = nx.get_edge_attributes(g_odd_complete_min_edges, 'weight')
+nx.draw_networkx_nodes(g_odd_complete_min_edges, pos, node_size=200, node_color='red')
+
+# draw old graph
+labels = nx.get_edge_attributes(g, 'weight')
+nx.draw_networkx_nodes(g, pos, node_size=200, node_color='gray', alpha=0.2)
+nx.draw_networkx_edges(g, pos, edgelist=g.edges(data=True), alpha=0.2)
+# nx.draw_networkx_labels(g, pos, labels_lookup, font_size=20, font_color='white')
+nx.draw_networkx_edge_labels(g, pos, edge_labels=labels)
+# finish old graph
+
+nx.draw_networkx_edges(g_odd_complete_min_edges, pos, edgelist=g_odd_complete_min_edges.edges(data=True), edge_color='blue')
 # nx.draw_networkx_labels(g, pos, labels_lookup, font_size=20, font_color='white')
 nx.draw_networkx_edge_labels(g, pos, edge_labels=labels)
 plt.show()

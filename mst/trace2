@@ -1,0 +1,56 @@
+/Users/karlemstrand/Documents/rlindsberg/Git/tsp/venv/bin/python /Users/karlemstrand/Documents/rlindsberg/Git/tsp/mst/visulise.py
+Create graph with the following constants:
+Size: 5
+Degree: 2
+Max Weight: 3
+Max Read: 3
+Graph Type: GraphType.RANDOM
+Weight Distribution: WeightDistribution.VISUAL
+
+[(1, 3), (1, 4), (3, 2), (4, 0), (2, 0)]
+{1: {3: {'weight': 2}, 4: {'weight': 3}}, 3: {1: {'weight': 2}, 2: {'weight': 1}}, 4: {1: {'weight': 3}, 0: {'weight': 1}}, 2: {3: {'weight': 1}, 0: {'weight': 1}}, 0: {4: {'weight': 1}, 2: {'weight': 1}}}
+approx_conponents is called
+
+############################# Searching weight 3 #############################
+############################# Reading 0 of 3 #############################
+Got new node 4
+
+Sampling node 1
+Sampling node 0
+############################# Reading 1 of 3 #############################
+Got new node 1
+
+Sampling node 3
+############################# Finished BFS #############################
+
+weight is 3
+Z
+[[], [], [], [[4, 1], [4, 0], [1, 3]], [], []]
+############################# Searching weight 2 #############################
+############################# Reading 2 of 3 #############################
+Got new node 4
+
+Sampling node 0
+############################# Reading 2 of 3 #############################
+Got new node 0
+
+Sampling node 2
+############################# Finished BFS #############################
+
+weight is 2
+Z
+[[], [], [[4, 0], [0, 2]], [[4, 1], [4, 0], [1, 3]], [], []]
+############################# Searching weight 1 #############################
+############################# Finished BFS #############################
+
+weight is 1
+Z
+[[], [], [[4, 0], [0, 2]], [[4, 1], [4, 0], [1, 3]], [], []]
+time up
+0.0004439353942871094
+5
+4
+Results {'our_time': 0.0004773139953613281, 'kuskrall_time': 0.0001239776611328125, 'groundtruth': 5, 'approximation': 4, 'error': 25.0}
+
+
+Process finished with exit code 0
