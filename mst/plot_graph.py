@@ -83,6 +83,25 @@ nx.draw_networkx_edge_labels(g, pos, edge_labels=labels)
 plt.show()
 
 
+bfs_path_edges = [[0, 2], [0, 3], [0, 4]]
+g_odd_complete_min_edges = nx.Graph(bfs_path_edges)
+labels = nx.get_edge_attributes(g_odd_complete_min_edges, 'weight')
+nx.draw_networkx_nodes(g_odd_complete_min_edges, pos, node_size=200, node_color='red')
+
+# draw old graph
+labels = nx.get_edge_attributes(g, 'weight')
+nx.draw_networkx_nodes(g, pos, node_size=200, node_color='gray', alpha=0.2)
+nx.draw_networkx_edges(g, pos, edgelist=g.edges(data=True), alpha=0.2)
+# nx.draw_networkx_labels(g, pos, labels_lookup, font_size=20, font_color='white')
+nx.draw_networkx_edge_labels(g, pos, edge_labels=labels)
+# finish old graph
+
+nx.draw_networkx_edges(g_odd_complete_min_edges, pos, edgelist=g_odd_complete_min_edges.edges(data=True), edge_color='blue')
+# nx.draw_networkx_labels(g, pos, labels_lookup, font_size=20, font_color='white')
+nx.draw_networkx_edge_labels(g, pos, edge_labels=labels)
+plt.show()
+
+
 # w = 2
 ### draw whole graph
 labels = nx.get_edge_attributes(g, 'weight')
