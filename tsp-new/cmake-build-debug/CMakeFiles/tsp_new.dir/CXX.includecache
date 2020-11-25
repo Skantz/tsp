@@ -1,0 +1,20 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+C:/Users/Martijn/Code/tsp/tsp-new/main.cpp
+iostream
+-
+vector
+-
+algorithm
+-
+chrono
+-
+cmath
+-
+

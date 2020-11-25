@@ -1,0 +1,3 @@
+C:/Users/Martijn/Code/tsp/tsp-new/cmake-build-debug/CMakeFiles/tsp_new.dir
+C:/Users/Martijn/Code/tsp/tsp-new/cmake-build-debug/CMakeFiles/edit_cache.dir
+C:/Users/Martijn/Code/tsp/tsp-new/cmake-build-debug/CMakeFiles/rebuild_cache.dir

@@ -130,8 +130,8 @@ fn three_opt_move(tour: &Vec<i32>, n: i32, dm: &Vec<Vec<i32>>, i: i32, j: i32, k
 
     } else {
 
-        let mut tmp = vec![0i32; (k - j) as usize];
-        
+        // let mut tmp = vec![0i32; (k - j) as usize];
+
 
     }
 }
@@ -142,7 +142,7 @@ fn main() {
     let n = 10;
 
     let mut dm = vec![vec![n]; n];
-    fill_distance_matrix(dm);
+    // fill_distance_matrix(dm);
     
     println!("Hello, world!");
 }
