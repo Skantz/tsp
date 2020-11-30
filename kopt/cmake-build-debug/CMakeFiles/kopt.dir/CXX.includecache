@@ -1,0 +1,28 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+C:/Users/Martijn/Code/tsp/kopt/main.cpp
+iostream
+-
+vector
+-
+set
+-
+utility
+-
+algorithm
+-
+map
+-
+random
+-
+ctime
+-
+chrono
+-
+

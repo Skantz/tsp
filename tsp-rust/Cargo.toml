@@ -1,0 +1,9 @@
+[package]
+name = "tsp-rust"
+version = "0.1.0"
+authors = ["Martijn Atema <martijn@atema.one>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
