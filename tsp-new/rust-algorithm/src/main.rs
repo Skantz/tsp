@@ -8,8 +8,6 @@ use std::cmp;
 //node-shift 
 //k-opt
 
-
-
 fn fill_distance_matrix(n: i32, dm: &mut Vec<Vec<i32>>) {
     let mut points : Vec<f64> = vec![];
     let stdin = io::stdin();
