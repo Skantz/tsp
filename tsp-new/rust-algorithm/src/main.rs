@@ -1,6 +1,10 @@
 use std::io;
 use std::cmp;
 
+const TIME_LIMIT: usize = 1890 * 1000 * 1000;
+const SIYE: usize = 1000;
+const KOPT_DEPTH: usize =1;
+
 //two-opt
 //two-opt-move
 //three-opt-move
@@ -8,15 +12,13 @@ use std::cmp;
 //node-shift 
 //k-opt
 
-
-
-fn fill_distance_matrix(n: i32, dm: &mut Vec<Vec<i32>>) {
-    let mut points : Vec<f64> = vec![];
+fn fill_distance_matrix(n: usize, dm: &mut Vec<Vec<usize>>) {
+    let mut points : Vec<usize> = vec![];
     let stdin = io::stdin();
 
     //Read in std
     for line in stdin.lock().lines().map(|l| l.unwrap()) {
-        let nums: Vec<f64> = line.split_whitespace()
+        let nums: Vec<usize> = line.split_whitespace()
             .map(|num| num.parse().unwrap())
             .collect();
         points.push(nums[0]);
@@ -27,16 +29,16 @@ fn fill_distance_matrix(n: i32, dm: &mut Vec<Vec<i32>>) {
     
 }
 
-fn greedy_tour(n: i32, dm: &Vec<Vec<i32>>) -> Vec<i32> {
-    let mut tour : Vec<i32> = vec![0; n as usize];
-    let mut used : Vec<bool> = vec![false; n as usize];
+fn greedy_tour(n: usize, dm: &Vec<Vec<usize>>) -> Vec<usize> {
+    let mut tour : Vec<usize> = vec![0;n];
+    let mut used : Vec<bool> = vec![false; n];
     used[0] = true;
 
     for i in 1..n {
-        let mut best = -1i32;
+        let best = -1i32;
 
-        for j in 0..n {
-            if !used[j] && (best == -1 || dm[tour[i-1]][j] < dm[tour[i - 1]][best]) {
+        for j  in 0..n {
+            if !used[j] && (best == -1 || dm[tour[i-1]][j] < dm[tour[(i-1)]][best]) {
                 best = j;
             }
         }
@@ -53,7 +55,7 @@ fn n_mod_m <T: std::ops::Rem<Output = T> + std::ops::Add<Output = T> + Copy>
     ((n % m) + m) % m
 }
 
-fn two_opt(tour: &Vec<i32>, n: i32, dm: &Vec<Vec<i32>>) {
+fn two_opt(tour: &Vec<usize>, n: usize, dm: &Vec<Vec<usize>>) {
     let mut improved = true;
     let mut capital_delta = 0;
 
@@ -61,7 +63,7 @@ fn two_opt(tour: &Vec<i32>, n: i32, dm: &Vec<Vec<i32>>) {
         improved = false;
 
         for i in 0..n {
-            for j in i+1..n-1 {
+            for j in i+1..(n-1) {
                 let i_m = n_mod_m((i - 1), n);
                 let j_p = (j + 1) % n;
 
@@ -81,7 +83,7 @@ fn two_opt(tour: &Vec<i32>, n: i32, dm: &Vec<Vec<i32>>) {
     }
 }
 
-fn two_opt_move(tour: &Vec<i32>, n: i32, dm: &Vec<Vec<i32>>, i: i32, j: i32) {
+fn two_opt_move(tour: &Vec<usize>, n: usize, dm: &Vec<Vec<usize>>, i: usize, j: usize) {
     let i_m = n_mod_m((i - 1), n);
     let j_p = (j + 1) % n;
 
@@ -93,7 +95,7 @@ fn two_opt_move(tour: &Vec<i32>, n: i32, dm: &Vec<Vec<i32>>, i: i32, j: i32) {
     return new_cost - old_cost;
 }
 
-fn three_opt_move(tour: &Vec<i32>, n: i32, dm: &Vec<Vec<i32>>, i: i32, j: i32, k: i32) {
+fn three_opt_move(tour: &Vec<usize>, n: usize, dm: &Vec<Vec<usize>>, i: usize, j: usize, k: usize) {
     let a = tour[i - 1];
     let b = tour[i];
     let c = tour[j - 1];
